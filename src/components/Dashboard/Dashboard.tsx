@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { motion } from 'framer-motion';
 import PlatformCard from './PlatformCard';
 import ApplicationList from './ApplicationList';
+import { FaListUl, FaThLarge } from 'react-icons/fa';
 import { Application, Platform } from '../../types';
-import { FaCog, FaBriefcase } from 'react-icons/fa';
 import Button from '../shared/Button';
 import { useSettings } from '../../contexts/SettingsContext';
 
@@ -135,7 +136,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             onClick={onSettings}
             aria-label="Настройки"
           >
-            <FaCog size={20} />
+            <FaListUl size={20} />
           </Button>
         </DashboardControls>
       </DashboardHeader>
