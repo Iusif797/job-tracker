@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "job-application-tracker",
   "builds": [
     {
       "src": "package.json",
