@@ -25,6 +25,9 @@ export const calculateStats = (applications: Application[]): Stats => {
   const byPosition: Record<string, number> = {};
   const byExperience: Record<string, number> = {};
   
+  // Для статистики по дням недели (0 - воскресенье, 1 - понедельник, ... 6 - суббота)
+  const byDayOfWeek: number[] = [0, 0, 0, 0, 0, 0, 0];
+  
   const salaries: number[] = [];
   const responseTimes: number[] = [];
   
@@ -47,6 +50,11 @@ export const calculateStats = (applications: Application[]): Stats => {
     const date = new Date(app.date);
     const monthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
     byMonth[monthKey] = (byMonth[monthKey] || 0) + 1;
+    
+    // По дням недели (перемещаем воскресенье в конец массива)
+    const dayOfWeek = date.getDay();
+    const adjustedDayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 0 -> 6, 1 -> 0, 2 -> 1, и т.д.
+    byDayOfWeek[adjustedDayIndex]++;
     
     // По статусам
     if (app.status in byStatus) {
@@ -158,6 +166,7 @@ export const calculateStats = (applications: Application[]): Stats => {
     byPlatform,
     byMonth,
     byStatus,
+    byDayOfWeek,
     bySalary: {
       min: minSalary,
       max: maxSalary,

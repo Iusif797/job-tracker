@@ -520,8 +520,6 @@ const Settings: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                     <Select defaultValue="ru">
                       <option value="ru">Русский</option>
                       <option value="en">English</option>
-                      <option value="de">Deutsch</option>
-                      <option value="fr">Français</option>
                     </Select>
                   </SettingItem>
                   

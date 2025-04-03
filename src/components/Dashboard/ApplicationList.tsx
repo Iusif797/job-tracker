@@ -85,6 +85,10 @@ const Tag = styled.span<{ color?: string }>`
   font-weight: 500;
 `;
 
+const StatusTag = styled(Tag)`
+  margin-right: 24px; /* Добавляем отступ справа для предотвращения наложения на звездочку */
+`;
+
 const DateDisplay = styled.div`
   font-size: 0.8rem;
   color: ${({ theme }) => theme.colors.textSecondary};
@@ -116,6 +120,7 @@ const FavoriteButton = styled(ActionButton)<{ $isFavorite: boolean }>`
   top: 0.5rem;
   right: 0.5rem;
   color: ${({ $isFavorite }) => $isFavorite ? '#FFC107' : 'inherit'};
+  z-index: 10; /* Увеличиваем z-index, чтобы кнопка была выше других элементов */
 `;
 
 const NoApplicationsMessage = styled.div`
@@ -191,9 +196,9 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
             <CompanyName>{application.company}</CompanyName>
             <Position>{application.position}</Position>
           </div>
-          <Tag color={statusColor}>
+          <StatusTag color={statusColor}>
             {application.status}
-          </Tag>
+          </StatusTag>
         </ApplicationHeader>
         
         <Details>

@@ -42,9 +42,10 @@ export interface Application {
 
 export interface Stats {
   totalApplications: number;
-  byPlatform: Record<string, number>;
+  byPlatform: Record<Platform, number>;
   byMonth: Record<string, number>;
-  byStatus: Record<string, number>;
+  byStatus: Record<Status, number>;
+  byDayOfWeek: number[]; // [пн, вт, ср, чт, пт, сб, вс]
   bySalary: {
     min: number;
     max: number;

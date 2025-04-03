@@ -57,8 +57,8 @@ const Count = styled.div<{ color?: string }>`
 `;
 
 const PlatformCard: React.FC<PlatformCardProps> = ({ platform, count, onClick }) => {
-  let icon: React.ReactElement = <FaGlobe size={24} />;
-  let color: string = '#8E8E93';
+  let icon: React.ReactElement;
+  let color: string;
   
   switch (platform) {
     case 'LinkedIn':
@@ -73,7 +73,7 @@ const PlatformCard: React.FC<PlatformCardProps> = ({ platform, count, onClick })
       icon = <BsBriefcaseFill size={24} />;
       color = '#D6001C';
       break;
-    case 'Other':
+    default:
       icon = <FaGlobe size={24} />;
       color = '#8E8E93';
       break;

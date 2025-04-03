@@ -97,8 +97,8 @@ export const lightTheme: DefaultTheme = {
     large: '0 8px 24px rgba(0, 0, 0, 0.15)',
   },
   fonts: {
-    primary: "'Roboto', 'Segoe UI', 'Helvetica Neue', sans-serif",
-    secondary: "'Roboto Slab', 'Times New Roman', serif",
+    primary: "'Montserrat', 'Roboto', 'Segoe UI', sans-serif",
+    secondary: "'Playfair Display', 'Georgia', serif",
   },
   breakpoints: {
     mobile: '480px',
@@ -163,8 +163,8 @@ export const darkTheme: DefaultTheme = {
     large: '0 8px 24px rgba(0, 0, 0, 0.3)',
   },
   fonts: {
-    primary: "'Roboto', 'Segoe UI', 'Helvetica Neue', sans-serif",
-    secondary: "'Roboto Slab', 'Times New Roman', serif",
+    primary: "'Montserrat', 'Roboto', 'Segoe UI', sans-serif",
+    secondary: "'Playfair Display', 'Georgia', serif",
   },
   breakpoints: {
     mobile: '480px',

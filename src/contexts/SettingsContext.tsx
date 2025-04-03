@@ -32,17 +32,32 @@ export const useSettings = () => {
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState(defaultSettings);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Загрузка настроек при монтировании
   useEffect(() => {
-    const savedSettings = loadSettings();
-    setSettings(savedSettings);
+    const initSettings = async () => {
+      try {
+        const savedSettings = await loadSettings();
+        setSettings(savedSettings);
+      } catch (error) {
+        console.error('Ошибка при загрузке настроек:', error);
+      } finally {
+        setIsInitialized(true);
+      }
+    };
+    
+    initSettings();
   }, []);
 
   // Сохранение настроек при изменении
   useEffect(() => {
-    saveSettings(settings);
-  }, [settings]);
+    if (isInitialized) {
+      saveSettings(settings).catch(error => {
+        console.error('Ошибка при сохранении настроек:', error);
+      });
+    }
+  }, [settings, isInitialized]);
 
   const toggleTheme = () => {
     setSettings(prev => ({
@@ -85,6 +100,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const resetSettings = () => {
     setSettings(defaultSettings);
   };
+
+  // Отображаем ничего до завершения инициализации контекста
+  if (!isInitialized) {
+    return null;
+  }
 
   return (
     <SettingsContext.Provider
