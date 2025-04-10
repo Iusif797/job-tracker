@@ -10,7 +10,7 @@ import { Application } from '../../types';
 import { calculateStats } from '../../utils/stats';
 import { useSettings } from '../../contexts/SettingsContext';
 
-// Регистрация необходимых компонентов ChartJS
+
 ChartJS.register(ArcElement, LineElement, BarElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend);
 
 const StatsContainer = styled(motion.div)`

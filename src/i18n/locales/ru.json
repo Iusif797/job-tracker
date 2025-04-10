@@ -1,0 +1,115 @@
+{
+  "translation": {
+    "common": {
+      "jobTracker": "Трекер откликов на вакансии",
+      "addApplication": "Добавить отклик",
+      "viewStatistics": "Статистика",
+      "settings": "Настройки",
+      "loading": "Загрузка данных...",
+      "noApplications": "Нет откликов",
+      "addFirstApplication": "Нажмите на кнопку \"+\" в правом верхнем углу, чтобы добавить свой первый отклик.",
+      "add": "Добавить",
+      "save": "Сохранить",
+      "cancel": "Отмена"
+    },
+    "header": {
+      "switchToLight": "Переключить на светлую тему",
+      "switchToDark": "Переключить на темную тему",
+      "language": "Язык"
+    },
+    "platforms": {
+      "linkedin": "LinkedIn",
+      "glassdoor": "Glassdoor",
+      "headhunter": "HeadHunter",
+      "other": "Другое"
+    },
+    "form": {
+      "editApplication": "Редактировать заявку",
+      "addApplication": "Добавить заявку",
+      "company": "Компания",
+      "companyPlaceholder": "Например: Яндекс",
+      "position": "Должность",
+      "platform": "Платформа",
+      "date": "Дата отклика",
+      "status": "Статус",
+      "salary": "Зарплата",
+      "salaryPlaceholder": "Зарплата в рублях",
+      "location": "Местоположение",
+      "locationPlaceholder": "Например: Москва",
+      "remote": "Удаленная работа",
+      "favorite": "Добавить в избранное",
+      "notes": "Заметки",
+      "notesPlaceholder": "Ваши заметки о вакансии"
+    },
+    "applicationForm": {
+      "addNew": "Добавить новый отклик",
+      "edit": "Редактировать отклик",
+      "platform": "Платформа",
+      "date": "Дата отклика",
+      "position": "Должность",
+      "company": "Компания",
+      "status": "Статус",
+      "notes": "Заметки",
+      "save": "Сохранить",
+      "cancel": "Отмена",
+      "companyPlaceholder": "Например: Google"
+    },
+    "positions": {
+      "frontend": "Frontend разработчик",
+      "backend": "Backend разработчик",
+      "fullstack": "Fullstack разработчик",
+      "devops": "DevOps инженер",
+      "qa": "QA инженер",
+      "uxui": "UX/UI дизайнер",
+      "dataScience": "Data Scientist",
+      "other": "Другое"
+    },
+    "statuses": {
+      "applied": "Отправлено",
+      "viewed": "Просмотрено",
+      "interview": "Интервью",
+      "offer": "Оффер",
+      "rejected": "Отказ"
+    },
+    "dashboard": {
+      "allApplications": "Все отклики",
+      "applicationFor": "Отклики на {{platform}}",
+      "list": "Список",
+      "kanban": "Канбан"
+    },
+    "stats": {
+      "title": "Статистика откликов",
+      "totalApplications": "Всего откликов",
+      "platforms": "По платформам",
+      "timeline": "Временная шкала",
+      "statuses": "По статусам",
+      "offerProbability": "Вероятность получения оффера",
+      "back": "Назад"
+    },
+    "auth": {
+      "login": "Войти",
+      "register": "Регистрация",
+      "logout": "Выйти",
+      "email": "Email",
+      "password": "Пароль",
+      "confirmPassword": "Подтвердите пароль",
+      "name": "Имя",
+      "submit": "Отправить",
+      "forgotPassword": "Забыли пароль?",
+      "alreadyHaveAccount": "Уже есть аккаунт? Войти",
+      "dontHaveAccount": "Нет аккаунта? Зарегистрироваться"
+    },
+    "footer": {
+      "developedBy": "Разработано"
+    },
+    "quickAdd": {
+      "title": "Быстрое добавление",
+      "addToLinkedin": "Добавить отклик в LinkedIn",
+      "addToGlassdoor": "Добавить отклик в Glassdoor",
+      "addToHeadhunter": "Добавить отклик в HeadHunter"
+    },
+    "applications": {
+      "noApplicationsInFolder": "Нет заявок в этой папке"
+    }
+  }
+} 

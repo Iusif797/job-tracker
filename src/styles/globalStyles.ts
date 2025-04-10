@@ -1,4 +1,4 @@
-import { createGlobalStyle } from 'styled-components';
+import { createGlobalStyle, keyframes } from 'styled-components';
 
 export const theme = {
   colors: {
@@ -14,13 +14,18 @@ export const theme = {
     text: '#1A1A1A',
     textSecondary: '#6C757D',
     border: '#E1E4E8',
-    // Удаляем 'error', так как он дублирует 'danger'
+    // Градиенты для фона
+    gradients: {
+      primary: 'linear-gradient(135deg, #5856D6 0%, #2AC9DE 100%)',
+      secondary: 'linear-gradient(135deg, #FF2D55 0%, #FFBD2E 100%)',
+      dark: 'linear-gradient(135deg, #434343 0%, #000000 100%)',
+    },
   },
   fonts: {
-    main: "'Montserrat', 'Roboto', sans-serif",
-    heading: "'Montserrat', 'Roboto', sans-serif",
-    primary: "'Montserrat', 'Roboto', sans-serif",
-    secondary: "'Montserrat', 'Roboto', sans-serif"
+    main: "'Poppins', 'Manrope', sans-serif",
+    heading: "'Poppins', 'Manrope', sans-serif",
+    primary: "'Poppins', 'Manrope', sans-serif",
+    secondary: "'Manrope', 'Poppins', sans-serif"
   },
   breakpoints: {
     mobile: '576px',
@@ -44,8 +49,20 @@ export const theme = {
   }
 };
 
+const gradientAnimation = keyframes`
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+`;
+
 const GlobalStyle = createGlobalStyle`
-  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
   
   * {
     margin: 0;
@@ -56,20 +73,36 @@ const GlobalStyle = createGlobalStyle`
   html {
     font-size: 16px;
     scroll-behavior: smooth;
+    height: 100%;
   }
   
   body {
     font-family: ${({ theme }) => theme.fonts.primary};
-    background-color: ${({ theme }) => theme.colors.background};
     color: ${({ theme }) => theme.colors.text};
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    background: linear-gradient(-45deg, #5856D6, #2AC9DE, #FF2D55, #FFBD2E);
+    background-size: 400% 400%;
+    animation: ${gradientAnimation} 15s ease infinite;
+    
+    &::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      backdrop-filter: blur(100px);
+      z-index: -1;
+    }
   }
   
   h1, h2, h3, h4, h5, h6 {
     font-family: ${({ theme }) => theme.fonts.secondary};
     line-height: 1.2;
+    letter-spacing: -0.02em;
   }
   
   button, input, select, textarea {
@@ -99,12 +132,79 @@ const GlobalStyle = createGlobalStyle`
   }
 
   .error-message {
-    background-color: ${({ theme }) => theme.colors.danger}; // Исправлено на 'danger'
+    background-color: ${({ theme }) => theme.colors.danger};
     color: white;
     padding: 1rem;
     margin: 1rem;
     border-radius: ${({ theme }) => theme.radius.medium};
     text-align: center;
+  }
+  
+  /* Стили для карточек откликов */
+  .application-card {
+    background-color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: ${({ theme }) => theme.radius.medium};
+    padding: 1.5rem;
+    box-shadow: ${({ theme }) => theme.shadows.medium};
+    transition: all ${({ theme }) => theme.transitions.default};
+    border-left: 4px solid ${({ theme }) => theme.colors.primary};
+    
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: ${({ theme }) => theme.shadows.large};
+    }
+    
+    @media (max-width: ${({ theme }) => theme.breakpoints.mobile}) {
+      padding: 1rem;
+    }
+  }
+  
+  .application-title {
+    font-weight: 600;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    color: ${({ theme }) => theme.colors.text};
+  }
+  
+  .application-company {
+    font-weight: 500;
+    color: ${({ theme }) => theme.colors.primary};
+    margin-bottom: 1rem;
+  }
+  
+  .application-status {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    
+    &.sent {
+      background-color: ${({ theme }) => theme.colors.primary}20;
+      color: ${({ theme }) => theme.colors.primary};
+    }
+    
+    &.interview {
+      background-color: ${({ theme }) => theme.colors.warning}20;
+      color: ${({ theme }) => theme.colors.warning};
+    }
+    
+    &.offer {
+      background-color: ${({ theme }) => theme.colors.success}20;
+      color: ${({ theme }) => theme.colors.success};
+    }
+    
+    &.rejected {
+      background-color: ${({ theme }) => theme.colors.danger}20;
+      color: ${({ theme }) => theme.colors.danger};
+    }
+  }
+  
+  .application-date {
+    font-size: 0.8rem;
+    color: ${({ theme }) => theme.colors.textSecondary};
   }
 `;
 

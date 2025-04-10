@@ -1,147 +1,168 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import styled from 'styled-components';
 import { Application, Status } from '../../types';
-import { FaEdit, FaTrash, FaStar } from 'react-icons/fa';
-import Card from '../shared/Card';
+import { motion, AnimatePresence } from 'framer-motion';
+import FolderItem from '../shared/FolderItem';
+import ApplicationCard from './ApplicationCard';
+import { useTranslation } from 'react-i18next';
+
+// Локальное определение интерфейса Folder
+interface Folder {
+  id: string;
+  name: string;
+  color?: string;
+  icon?: string;
+  count?: number;
+}
 
 const ListContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  position: relative;
 `;
 
 const KanbanContainer = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-top: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  width: 100%;
 `;
 
 const KanbanColumn = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 16px;
 `;
 
 const ColumnHeader = styled.div<{ color: string }>`
-  padding: 0.75rem;
-  border-radius: ${({ theme }) => theme.borderRadius.medium};
-  background-color: ${({ color }) => color};
-  color: white;
+  background: ${({ color }) => `${color}20`};
+  color: ${({ color }) => color};
+  padding: 12px 16px;
+  border-radius: 8px;
   font-weight: 600;
   text-align: center;
-  margin-bottom: 0.5rem;
-`;
-
-const StyledCard = styled(Card)`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  position: relative;
-  border-left: 4px solid ${({ theme, color }) => color || theme.colors.border};
-  transition: all 0.3s ease;
-  
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: ${({ theme }) => theme.shadows.medium};
-  }
-  
-  ${({ $isFavorite }) => $isFavorite && `
-    background-color: rgba(255, 193, 7, 0.05);
-  `}
-`;
-
-const ApplicationHeader = styled.div`
+  margin-bottom: 8px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 `;
 
-const CompanyName = styled.h3`
-  margin: 0;
-  font-size: 1.1rem;
-  color: ${({ theme }) => theme.colors.text};
-`;
-
-const Position = styled.div`
-  font-size: 0.9rem;
+const StatusCount = styled.div`
+  background: ${({ theme }) => theme.colors.surface};
   color: ${({ theme }) => theme.colors.textSecondary};
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 14px;
 `;
 
-const Details = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-`;
-
-const Tag = styled.span<{ color?: string }>`
-  display: inline-block;
-  padding: 0.2rem 0.5rem;
-  border-radius: ${({ theme }) => theme.borderRadius.small};
-  background-color: ${({ theme, color }) => color || theme.colors.surfaceVariant};
-  color: ${({ theme, color }) => color ? 'white' : theme.colors.text};
-  font-size: 0.8rem;
-  font-weight: 500;
-`;
-
-const StatusTag = styled(Tag)`
-  margin-right: 24px; /* Добавляем отступ справа для предотвращения наложения на звездочку */
-`;
-
-const DateDisplay = styled.div`
-  font-size: 0.8rem;
-  color: ${({ theme }) => theme.colors.textSecondary};
-`;
-
-const ActionButtons = styled.div`
-  display: flex;
-  gap: 0.5rem;
-  margin-left: auto;
-`;
-
-const ActionButton = styled.button<{ color?: string }>`
-  background-color: transparent;
-  color: ${({ theme, color }) => color || theme.colors.textSecondary};
-  border: none;
-  padding: 0.25rem;
-  cursor: pointer;
-  border-radius: ${({ theme }) => theme.borderRadius.small};
-  transition: all 0.2s ease;
+const FoldersContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
   
-  &:hover {
-    background-color: ${({ theme }) => theme.colors.backgroundHover};
-    color: ${({ theme, color }) => color || theme.colors.text};
+  @media (max-width: ${({ theme }) => theme.breakpoints.mobile}) {
+    grid-template-columns: 1fr;
   }
 `;
 
-const FavoriteButton = styled(ActionButton)<{ $isFavorite: boolean }>`
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  color: ${({ $isFavorite }) => $isFavorite ? '#FFC107' : 'inherit'};
-  z-index: 10; /* Увеличиваем z-index, чтобы кнопка была выше других элементов */
+const NoApplicationsMessage = styled(motion.div)`
+  text-align: center;
+  padding: 2rem;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  background-color: ${({ theme }) => theme.colors.surface};
+  border-radius: 12px;
+  box-shadow: ${({ theme }) => theme.shadows.medium};
 `;
 
-const NoApplicationsMessage = styled.div`
-  text-align: center;
-  padding: 1rem;
-  color: ${({ theme }) => theme.colors.textSecondary};
-`;
+// Предопределенные папки
+const DEFAULT_FOLDERS: Folder[] = [
+  { id: 'all', name: 'Все заявки', color: '#3498DB', icon: 'folder' },
+  { id: 'responses', name: 'Отклики', color: '#6C5CE7', icon: 'responses' },
+  { id: 'favorites', name: 'Избранное', color: '#F1C40F', icon: 'star' }
+];
+
+// Цвета для статусов
+const getStatusColor = (status: Status): string => {
+  switch (status) {
+    case 'Applied':
+      return '#3498DB';
+    case 'Viewed':
+      return '#9B59B6';
+    case 'Interview':
+      return '#F1C40F';
+    case 'Offer':
+      return '#2ECC71';
+    case 'Rejected':
+      return '#E74C3C';
+    default:
+      return '#95A5A6';
+  }
+};
+
+// Перевод статусов на русский
+const getStatusText = (status: Status): string => {
+  switch (status) {
+    case 'Applied':
+      return 'Отправлено';
+    case 'Viewed':
+      return 'Просмотрено';
+    case 'Interview':
+      return 'Интервью';
+    case 'Offer':
+      return 'Оффер';
+    case 'Rejected':
+      return 'Отказ';
+    default:
+      return status;
+  }
+};
 
 interface ApplicationListProps {
   applications: Application[];
   onUpdate: (application: Application) => void;
   onDelete: (id: string) => void;
-  viewMode: 'list' | 'kanban';
+  onEdit: (id: string) => void;
+  viewMode?: 'list' | 'kanban';
+  folders?: Folder[];
 }
 
-const ApplicationList: React.FC<ApplicationListProps> = ({ 
-  applications, 
-  onUpdate, 
+const ApplicationList: React.FC<ApplicationListProps> = ({
+  applications,
+  onUpdate,
   onDelete,
-  viewMode 
+  onEdit,
+  viewMode = 'list',
+  folders = []
 }) => {
+  const [activeFolder, setActiveFolder] = useState<string | null>('all');
+  const { t } = useTranslation();
+  
+  // Объединяем стандартные папки и пользовательские
+  const allFolders = useMemo(() => {
+    return [...DEFAULT_FOLDERS, ...folders.filter(f => 
+      !DEFAULT_FOLDERS.some(df => df.id === f.id)
+    )];
+  }, [folders]);
+  
+  // Фильтруем заявки по активной папке
+  const filteredApplications = useMemo(() => {
+    if (!activeFolder || activeFolder === 'all') {
+      return applications;
+    } else if (activeFolder === 'favorites') {
+      return applications.filter(app => app.favorite);
+    }
+    return applications.filter(app => app.folder === activeFolder);
+  }, [applications, activeFolder]);
+  
+  // Сортировка по дате (новые сначала)
+  const sortedApplications = useMemo(() => {
+    return [...filteredApplications].sort((a, b) => {
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+  }, [filteredApplications]);
+  
   const toggleFavorite = (application: Application) => {
     onUpdate({
       ...application,
@@ -149,130 +170,132 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
     });
   };
   
-  const getStatusColor = (status: Status): string => {
-    switch (status) {
-      case 'Applied': return '#5AC8FA';
-      case 'Viewed': return '#FFCC00';
-      case 'Interview': return '#FF9500';
-      case 'Offer': return '#34C759';
-      case 'Rejected': return '#FF3B30';
-      default: return '#8E8E93';
-    }
+  const toggleFolder = (application: Application, folderId: string) => {
+    onUpdate({
+      ...application,
+      folder: application.folder === folderId ? undefined : folderId
+    });
   };
   
-  const formatDate = (dateString: string): string => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString();
-    } catch (error) {
-      return dateString;
+  // Рендер списка заявок
+  const renderApplicationItems = () => {
+    if (filteredApplications.length === 0) {
+      return (
+        <NoApplicationsMessage
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <p>{t('applications.noApplicationsInFolder') || 'Нет заявок в этой папке'}</p>
+        </NoApplicationsMessage>
+      );
     }
-  };
-  
-  const sortApplications = (a: Application, b: Application): number => {
-    try {
-      const dateA = new Date(a.date).getTime();
-      const dateB = new Date(b.date).getTime();
-      return dateB - dateA;
-    } catch (error) {
-      return 0;
-    }
-  };
-  
-  const renderApplicationItem = (application: Application) => {
-    const statusColor = getStatusColor(application.status);
-    const isFavorite = Boolean(application.favorite);
     
     return (
-      <StyledCard 
-        key={application.id}
-        padding="medium"
-        elevation="small"
-        color={statusColor}
-        $isFavorite={isFavorite}
-      >
-        <ApplicationHeader>
-          <div>
-            <CompanyName>{application.company}</CompanyName>
-            <Position>{application.position}</Position>
-          </div>
-          <StatusTag color={statusColor}>
-            {application.status}
-          </StatusTag>
-        </ApplicationHeader>
-        
-        <Details>
-          <Tag>{application.platform}</Tag>
-          {application.location && <Tag>{application.location}</Tag>}
-          {application.remote && <Tag color="#5856D6">Удаленная</Tag>}
-          {application.salary && <Tag color="#34C759">{application.salary.toLocaleString()} ₽</Tag>}
-        </Details>
-        
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <DateDisplay>{formatDate(application.date)}</DateDisplay>
-          <ActionButtons>
-            <ActionButton 
-              onClick={() => console.log(`Edit application ${application.id}`)}
-              color={getStatusColor('Applied')}
-            >
-              <FaEdit size={16} />
-            </ActionButton>
-            <ActionButton 
-              onClick={() => onDelete(application.id)}
-              color={getStatusColor('Rejected')}
-            >
-              <FaTrash size={16} />
-            </ActionButton>
-          </ActionButtons>
-        </div>
-        
-        <FavoriteButton 
-          $isFavorite={isFavorite}
-          onClick={() => toggleFavorite(application)}
-        >
-          <FaStar size={16} />
-        </FavoriteButton>
-      </StyledCard>
+      <AnimatePresence>
+        {sortedApplications.map(application => (
+          <ApplicationCard
+            key={application.id}
+            application={application}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onToggleFavorite={toggleFavorite}
+            onToggleFolder={toggleFolder}
+            inResponses={application.folder === 'responses'}
+          />
+        ))}
+      </AnimatePresence>
     );
   };
   
-  if (applications.length === 0) {
-    return <NoApplicationsMessage>Нет заявок для отображения</NoApplicationsMessage>;
-  }
-  
-  if (viewMode === 'list') {
-    return (
-      <ListContainer>
-        {applications
-          .sort(sortApplications)
-          .map(renderApplicationItem)}
-      </ListContainer>
-    );
-  }
-  
-  // Канбан режим
-  const statusColumns: Status[] = ['Applied', 'Viewed', 'Interview', 'Offer', 'Rejected'];
-  
-  return (
-    <KanbanContainer>
-      {statusColumns.map(status => {
-        const filteredApps = applications.filter(app => app.status === status);
+  // Рендер папок
+  const renderFolders = () => (
+    <FoldersContainer>
+      {allFolders.map(folder => {
+        const folderCount = folder.id === 'all' 
+          ? applications.length 
+          : folder.id === 'favorites'
+            ? applications.filter(app => app.favorite).length
+            : applications.filter(app => app.folder === folder.id).length;
+        
         return (
-          <KanbanColumn key={status}>
-            <ColumnHeader color={getStatusColor(status)}>
-              {status} ({filteredApps.length})
-            </ColumnHeader>
-            {filteredApps.length > 0 ? (
-              filteredApps
-                .sort(sortApplications)
-                .map(renderApplicationItem)
-            ) : (
-              <NoApplicationsMessage>Нет заявок</NoApplicationsMessage>
-            )}
-          </KanbanColumn>
+          <FolderItem
+            key={folder.id}
+            id={folder.id}
+            name={folder.name}
+            count={folderCount}
+            color={folder.color}
+            icon={folder.id === 'responses' ? 'responses' : folder.icon}
+            active={activeFolder === folder.id}
+            onClick={() => setActiveFolder(folder.id)}
+          />
         );
       })}
+    </FoldersContainer>
+  );
+  
+  // Группировка заявок по статусу для Kanban
+  const groupedByStatus = useMemo(() => {
+    const result: Record<Status, Application[]> = {
+      'Applied': [],
+      'Viewed': [],
+      'Interview': [],
+      'Offer': [],
+      'Rejected': []
+    };
+    
+    sortedApplications.forEach(app => {
+      if (result[app.status]) {
+        result[app.status].push(app);
+      }
+    });
+    
+    return result;
+  }, [sortedApplications]);
+  
+  // Порядок колонок в Kanban
+  const statusOrder: Status[] = ['Applied', 'Viewed', 'Interview', 'Offer', 'Rejected'];
+  
+  // Отрисовка в режиме Kanban
+  const renderKanbanView = () => (
+    <KanbanContainer>
+      {statusOrder.map(status => (
+        <KanbanColumn key={status}>
+          <ColumnHeader color={getStatusColor(status)}>
+            <div>{getStatusText(status)}</div>
+            <StatusCount>
+              {groupedByStatus[status]?.length || 0}
+            </StatusCount>
+          </ColumnHeader>
+          <AnimatePresence>
+            {groupedByStatus[status]?.map(application => (
+              <ApplicationCard
+                key={application.id}
+                application={application}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onToggleFavorite={toggleFavorite}
+                onToggleFolder={toggleFolder}
+                inResponses={application.folder === 'responses'}
+              />
+            ))}
+          </AnimatePresence>
+        </KanbanColumn>
+      ))}
     </KanbanContainer>
+  );
+  
+  return (
+    <>
+      {renderFolders()}
+      {viewMode === 'list' ? (
+        <ListContainer>
+          {renderApplicationItems()}
+        </ListContainer>
+      ) : (
+        renderKanbanView()
+      )}
+    </>
   );
 };
 

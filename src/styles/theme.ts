@@ -18,6 +18,7 @@ export interface Theme {
     mobile: string;
     tablet: string;
     desktop: string;
+    largeDesktop: string;
   };
   radius: {
     small: string;
@@ -55,9 +56,10 @@ export const lightTheme: Theme = {
     info: '#007AFF'
   },
   breakpoints: {
-    mobile: '320px',
+    mobile: '576px',
     tablet: '768px',
-    desktop: '1024px'
+    desktop: '1024px',
+    largeDesktop: '1200px'
   },
   radius: {
     small: '4px',
@@ -95,9 +97,10 @@ export const darkTheme: Theme = {
     info: '#0A84FF'
   },
   breakpoints: {
-    mobile: '320px',
+    mobile: '576px',
     tablet: '768px',
-    desktop: '1024px'
+    desktop: '1024px',
+    largeDesktop: '1200px'
   },
   radius: {
     small: '4px',

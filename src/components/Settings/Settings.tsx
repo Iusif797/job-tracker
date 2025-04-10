@@ -457,7 +457,7 @@ const Settings: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   <SettingItem>
                     <div>
                       <SettingLabel>
-                        {theme === 'dark' ? <FaMoon size={18} /> : <FaSun size={18} />} Тёмная тема
+                        {theme === 'dark' ? <FaMoon size={18} /> : <FaSun size={18} />} {theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
                       </SettingLabel>
                       <SettingDescription>
                         Изменить цветовую схему интерфейса

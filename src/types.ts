@@ -1,4 +1,4 @@
-export type Platform = 'LinkedIn' | 'Glassdoor' | 'HeadHunter' | 'Other';
+export type Platform = 'LinkedIn' | 'Glassdoor' | 'HeadHunter' | 'Indeed' | 'Прямой контакт' | 'Other';
 
 export type Status = 'Applied' | 'Viewed' | 'Interview' | 'Offer' | 'Rejected';
 
@@ -38,6 +38,15 @@ export interface Application {
   rejectionReason?: string;
   responseTime?: number; // в днях
   favorite?: boolean;
+  folder?: string;
+}
+
+export interface Folder {
+  id: string;
+  name: string;
+  color?: string;
+  icon?: string;
+  count?: number;
 }
 
 export interface Stats {

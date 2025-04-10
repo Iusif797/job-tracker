@@ -22,6 +22,7 @@ declare module 'styled-components' {
         secondary: string;
         success: string;
         info: string;
+        dark: string;
       };
     };
     shadows: {
@@ -85,10 +86,11 @@ export const lightTheme: DefaultTheme = {
     border: '#CECED2',
     borderLight: '#E5E5EA',
     gradients: {
-      primary: 'linear-gradient(120deg, #5856D6 0%, #7A79E3 100%)',
-      secondary: 'linear-gradient(120deg, #FF9500 0%, #FFBD3C 100%)',
-      success: 'linear-gradient(120deg, #34C759 0%, #30D158 100%)',
-      info: 'linear-gradient(120deg, #5AC8FA 0%, #64D2FF 100%)',
+      primary: 'linear-gradient(120deg, #5267DF 0%, #748BFF 100%)',
+      secondary: 'linear-gradient(120deg, #FF9F0A 0%, #FFBF40 100%)',
+      success: 'linear-gradient(120deg, #30DB5B 0%, #34D65C 100%)',
+      info: 'linear-gradient(120deg, #00B9FF 0%, #64D3FF 100%)',
+      dark: 'linear-gradient(135deg, #F8F8F8 0%, #E8E8E8 100%)',
     },
   },
   shadows: {
@@ -136,25 +138,26 @@ export const lightTheme: DefaultTheme = {
 
 export const darkTheme: DefaultTheme = {
   colors: {
-    primary: '#7A79E3',
-    secondary: '#FFBD3C',
-    success: '#30D158',
-    warning: '#FFD60A',
-    danger: '#FF453A',
-    info: '#64D2FF',
-    text: '#F2F2F7',
-    textSecondary: '#AEAEB2',
-    background: '#1C1C1E',
-    backgroundHover: '#2C2C2E',
-    surface: '#2C2C2E',
-    surfaceVariant: '#3A3A3C',
-    border: '#48484A',
-    borderLight: '#3A3A3C',
+    primary: '#6C5CE7',
+    secondary: '#8A7EFA',
+    success: '#2ECC71',
+    warning: '#F1C40F',
+    danger: '#E74C3C',
+    info: '#3498DB',
+    text: '#F0F0F0',
+    textSecondary: '#B0B0B0',
+    background: '#121212',
+    backgroundHover: '#1E1E1E',
+    surface: '#1A1A1A',
+    surfaceVariant: '#252525',
+    border: '#2D2D2D',
+    borderLight: '#363636',
     gradients: {
-      primary: 'linear-gradient(120deg, #5F5DC5 0%, #8D8CE3 100%)',
-      secondary: 'linear-gradient(120deg, #FF9F0A 0%, #FFBF40 100%)',
-      success: 'linear-gradient(120deg, #30DB5B 0%, #34D65C 100%)',
-      info: 'linear-gradient(120deg, #70D7FF 0%, #84DBFF 100%)',
+      primary: 'linear-gradient(135deg, #6C5CE7 0%, #8A7EFA 100%)',
+      secondary: 'linear-gradient(135deg, #8A7EFA 0%, #A5AFFB 100%)',
+      success: 'linear-gradient(120deg, #25BD60 0%, #2ECC71 100%)',
+      info: 'linear-gradient(120deg, #2980B9 0%, #3498DB 100%)',
+      dark: 'linear-gradient(135deg, #121212 0%, #1E1E1E 100%)',
     },
   },
   shadows: {

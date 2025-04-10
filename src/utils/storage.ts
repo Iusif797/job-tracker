@@ -8,8 +8,9 @@ const DB_VERSION = 1;
 const APPS_STORE = 'applications';
 const SETTINGS_STORE = 'settings';
 
-interface AppSettings {
+export interface AppSettings {
   theme: 'light' | 'dark';
+  language: 'ru' | 'en';
   defaultView: 'list' | 'kanban';
   notificationsEnabled: boolean;
   autoSaveInterval: number; // в минутах
@@ -23,6 +24,7 @@ interface AppSettings {
 
 export const defaultSettings: AppSettings = {
   theme: 'light',
+  language: 'ru',
   defaultView: 'list',
   notificationsEnabled: true,
   autoSaveInterval: 5,

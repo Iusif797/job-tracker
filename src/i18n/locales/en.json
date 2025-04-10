@@ -1,0 +1,115 @@
+{
+  "translation": {
+    "common": {
+      "jobTracker": "Job Application Tracker",
+      "addApplication": "Add Application",
+      "viewStatistics": "Statistics",
+      "settings": "Settings",
+      "loading": "Loading data...",
+      "noApplications": "No applications",
+      "addFirstApplication": "Click the \"+\" button in the top right corner to add your first application.",
+      "add": "Add",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "header": {
+      "switchToLight": "Switch to light mode",
+      "switchToDark": "Switch to dark mode",
+      "language": "Language"
+    },
+    "platforms": {
+      "linkedin": "LinkedIn",
+      "glassdoor": "Glassdoor",
+      "headhunter": "HeadHunter",
+      "other": "Other"
+    },
+    "form": {
+      "editApplication": "Edit Application",
+      "addApplication": "Add Application",
+      "company": "Company",
+      "companyPlaceholder": "Example: Google",
+      "position": "Position",
+      "platform": "Platform",
+      "date": "Application Date",
+      "status": "Status",
+      "salary": "Salary",
+      "salaryPlaceholder": "Salary amount",
+      "location": "Location",
+      "locationPlaceholder": "Example: New York",
+      "remote": "Remote Work",
+      "favorite": "Add to Favorites",
+      "notes": "Notes",
+      "notesPlaceholder": "Your notes about the job"
+    },
+    "applicationForm": {
+      "addNew": "Add new application",
+      "edit": "Edit application",
+      "platform": "Platform",
+      "date": "Application date",
+      "position": "Position",
+      "company": "Company",
+      "status": "Status",
+      "notes": "Notes",
+      "save": "Save",
+      "cancel": "Cancel",
+      "companyPlaceholder": "Example: Google"
+    },
+    "positions": {
+      "frontend": "Frontend Developer",
+      "backend": "Backend Developer",
+      "fullstack": "Fullstack Developer",
+      "devops": "DevOps Engineer",
+      "qa": "QA Engineer",
+      "uxui": "UX/UI Designer",
+      "dataScience": "Data Scientist",
+      "other": "Other"
+    },
+    "statuses": {
+      "applied": "Applied",
+      "viewed": "Viewed",
+      "interview": "Interview",
+      "offer": "Offer",
+      "rejected": "Rejected"
+    },
+    "dashboard": {
+      "allApplications": "All applications",
+      "applicationFor": "Applications on {{platform}}",
+      "list": "List",
+      "kanban": "Kanban"
+    },
+    "stats": {
+      "title": "Job Applications Statistics",
+      "totalApplications": "Total applications",
+      "platforms": "By platforms",
+      "timeline": "Timeline",
+      "statuses": "By statuses",
+      "offerProbability": "Offer probability",
+      "back": "Back"
+    },
+    "auth": {
+      "login": "Login",
+      "register": "Register",
+      "logout": "Logout",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "name": "Name",
+      "submit": "Submit",
+      "forgotPassword": "Forgot password?",
+      "alreadyHaveAccount": "Already have an account? Login",
+      "dontHaveAccount": "Don't have an account? Register"
+    },
+    "footer": {
+      "developedBy": "Developed by"
+    },
+    "quickAdd": {
+      "title": "Quick Add",
+      "addToLinkedin": "Add LinkedIn application",
+      "addToGlassdoor": "Add Glassdoor application",
+      "addToHeadhunter": "Add HeadHunter application"
+    },
+    "applications": {
+      "noApplicationsInFolder": "No applications in this folder"
+    }
+  }
+} 

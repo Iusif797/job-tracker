@@ -5,6 +5,8 @@ interface GlobalStyleProps {
 }
 
 const GlobalStyle = createGlobalStyle<GlobalStyleProps>`
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+  
   *, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
@@ -13,6 +15,7 @@ const GlobalStyle = createGlobalStyle<GlobalStyleProps>`
   
   html {
     font-size: 16px;
+    scroll-behavior: smooth;
     
     @media (max-width: ${({ theme }) => theme.breakpoints.mobile}) {
       font-size: 14px;
@@ -23,11 +26,12 @@ const GlobalStyle = createGlobalStyle<GlobalStyleProps>`
     font-family: ${({ theme }) => theme.fonts.primary};
     background-color: ${({ theme }) => theme.colors.background};
     color: ${({ theme }) => theme.colors.text};
-    line-height: 1.6;
+    line-height: 1.5;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     transition: background-color 0.3s ease;
+    min-height: 100vh;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -67,7 +71,7 @@ const GlobalStyle = createGlobalStyle<GlobalStyleProps>`
   a {
     color: ${({ theme }) => theme.colors.primary};
     text-decoration: none;
-    transition: color 0.2s ease;
+    transition: color 0.3s ease;
     
     &:hover {
       color: ${({ theme }) => theme.colors.secondary};
@@ -79,8 +83,9 @@ const GlobalStyle = createGlobalStyle<GlobalStyleProps>`
     font-family: ${({ theme }) => theme.fonts.primary};
     font-size: 1rem;
     
-    &:focus {
-      outline: none;
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
     }
   }
   
@@ -89,20 +94,18 @@ const GlobalStyle = createGlobalStyle<GlobalStyleProps>`
     font-size: 1rem;
     padding: 0.75rem 1rem;
     border: 1px solid ${({ theme }) => theme.colors.border};
-    border-radius: ${({ theme }) => theme.borderRadius.medium};
-    background-color: ${({ theme }) => theme.colors.surface};
-    color: ${({ theme }) => theme.colors.text};
-    transition: all 0.2s ease;
+    border-radius: ${({ theme }) => theme.radius.medium};
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
     
     &:focus {
       outline: none;
       border-color: ${({ theme }) => theme.colors.primary};
-      box-shadow: 0 0 0 2px ${({ theme }) => `${theme.colors.primary}25`};
+      box-shadow: 0 0 0 2px ${({ theme }) => theme.colors.primary}33;
     }
     
-    @media (max-width: ${({ theme }) => theme.breakpoints.mobile}) {
-      width: 100%;
-      padding: 0.6rem 0.8rem;
+    &::placeholder {
+      color: ${({ theme }) => theme.colors.textSecondary};
+      opacity: 0.7;
     }
   }
   
@@ -164,18 +167,42 @@ const GlobalStyle = createGlobalStyle<GlobalStyleProps>`
     width: 8px;
     height: 8px;
   }
-
+  
   ::-webkit-scrollbar-track {
-    background: ${({ theme }) => theme.colors.background};
+    background: ${({ theme }) => theme.colors.backgroundHover || theme.colors.background};
+    border-radius: 10px;
   }
-
+  
   ::-webkit-scrollbar-thumb {
-    background: ${({ theme }) => theme.colors.borderLight};
-    border-radius: 4px;
+    background: ${({ theme }) => theme.colors.primary}80;
+    border-radius: 10px;
   }
-
+  
   ::-webkit-scrollbar-thumb:hover {
-    background: ${({ theme }) => theme.colors.border};
+    background: ${({ theme }) => theme.colors.primary};
+  }
+  
+  /* Анимации для Framer Motion */
+  .page-transition-enter {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  
+  .page-transition-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 300ms, transform 300ms;
+  }
+  
+  .page-transition-exit {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .page-transition-exit-active {
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 300ms, transform 300ms;
   }
 `;
 

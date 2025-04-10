@@ -1,18 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { defaultSettings, loadSettings, saveSettings } from '../utils/storage';
+import { AppSettings, defaultSettings, loadSettings, saveSettings } from '../utils/storage';
+import i18n from '../i18n/i18n';
 
-interface SettingsContextType {
-  theme: 'light' | 'dark';
-  defaultView: 'list' | 'kanban';
-  notificationsEnabled: boolean;
-  autoSaveInterval: number;
-  statisticsVisibility: {
-    platforms: boolean;
-    timeline: boolean;
-    statuses: boolean;
-    salary: boolean;
-  };
+interface SettingsContextType extends AppSettings {
   toggleTheme: () => void;
+  changeLanguage: (lang: 'ru' | 'en') => void;
   setDefaultView: (view: 'list' | 'kanban') => void;
   toggleNotifications: () => void;
   setAutoSaveInterval: (minutes: number) => void;
@@ -31,7 +23,7 @@ export const useSettings = () => {
 };
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [settings, setSettings] = useState(defaultSettings);
+  const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Загрузка настроек при монтировании
@@ -40,6 +32,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       try {
         const savedSettings = await loadSettings();
         setSettings(savedSettings);
+        
+        // Применяем сохраненный язык при загрузке
+        if (savedSettings.language) {
+          i18n.changeLanguage(savedSettings.language);
+        }
       } catch (error) {
         console.error('Ошибка при загрузке настроек:', error);
       } finally {
@@ -63,6 +60,14 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setSettings(prev => ({
       ...prev,
       theme: prev.theme === 'light' ? 'dark' : 'light'
+    }));
+  };
+
+  const changeLanguage = (lang: 'ru' | 'en') => {
+    i18n.changeLanguage(lang);
+    setSettings(prev => ({
+      ...prev,
+      language: lang
     }));
   };
 
@@ -99,6 +104,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const resetSettings = () => {
     setSettings(defaultSettings);
+    i18n.changeLanguage(defaultSettings.language);
   };
 
   // Отображаем ничего до завершения инициализации контекста
@@ -111,6 +117,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       value={{
         ...settings,
         toggleTheme,
+        changeLanguage,
         setDefaultView,
         toggleNotifications,
         setAutoSaveInterval,

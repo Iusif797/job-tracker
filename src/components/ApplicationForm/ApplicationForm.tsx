@@ -1,18 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { v4 as uuidv4 } from 'uuid';
-import { Platform, Application } from '../../types';
+import { Platform, Application, Status } from '../../types';
 import Button from '../shared/Button';
 import Card from '../shared/Card';
+import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
-const FormContainer = styled(Card)`
+const FormOverlay = styled(motion.div)`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+`;
+
+const FormContainer = styled(motion.div)`
+  background-color: ${({ theme }) => theme.colors.surface};
+  border-radius: 16px;
+  padding: 2rem;
+  width: 100%;
   max-width: 600px;
-  margin: 2rem auto;
+  box-shadow: ${({ theme }) => theme.shadows.large};
+  max-height: 90vh;
+  overflow-y: auto;
+  
+  @media (max-width: ${({ theme }) => theme.breakpoints.mobile}) {
+    padding: 1.5rem;
+  }
 `;
 
 const FormTitle = styled.h2`
-  margin: 0 0 1.5rem 0;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
   color: ${({ theme }) => theme.colors.text};
+  font-size: 1.5rem;
   text-align: center;
 `;
 
@@ -23,219 +52,319 @@ const FormGroup = styled.div`
 const Label = styled.label`
   display: block;
   margin-bottom: 0.5rem;
-  font-weight: 500;
   color: ${({ theme }) => theme.colors.text};
+  font-weight: 500;
 `;
 
 const Input = styled.input`
   width: 100%;
   padding: 0.75rem;
+  border-radius: 8px;
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.small};
+  background-color: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
   font-size: 1rem;
-  transition: border-color ${({ theme }) => theme.transitions.default};
+  transition: border-color 0.3s;
   
   &:focus {
     outline: none;
     border-color: ${({ theme }) => theme.colors.primary};
-  }
-`;
-
-const Textarea = styled.textarea`
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.small};
-  font-size: 1rem;
-  min-height: 100px;
-  transition: border-color ${({ theme }) => theme.transitions.default};
-  resize: vertical;
-  
-  &:focus {
-    outline: none;
-    border-color: ${({ theme }) => theme.colors.primary};
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.colors.primary}30;
   }
 `;
 
 const Select = styled.select`
   width: 100%;
   padding: 0.75rem;
+  border-radius: 8px;
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius.small};
+  background-color: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
   font-size: 1rem;
-  transition: border-color ${({ theme }) => theme.transitions.default};
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  background-size: 1em;
+  transition: border-color 0.3s;
   
   &:focus {
     outline: none;
     border-color: ${({ theme }) => theme.colors.primary};
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.colors.primary}30;
   }
 `;
 
-const ButtonGroup = styled.div`
+const Textarea = styled.textarea`
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background-color: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 1rem;
+  min-height: 100px;
+  resize: vertical;
+  
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.colors.primary};
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.colors.primary}30;
+  }
+`;
+
+const FormActions = styled.div`
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 1rem;
   margin-top: 2rem;
 `;
 
+const Checkbox = styled.input`
+  margin-right: 0.5rem;
+`;
+
+const CheckboxLabel = styled.label`
+  display: flex;
+  align-items: center;
+  color: ${({ theme }) => theme.colors.text};
+  cursor: pointer;
+`;
+
+const Row = styled.div`
+  display: flex;
+  gap: 1rem;
+  
+  @media (max-width: ${({ theme }) => theme.breakpoints.mobile}) {
+    flex-direction: column;
+  }
+`;
+
 interface ApplicationFormProps {
-  onSubmit: (application: Application) => void;
-  onCancel: () => void;
   initialData?: Application;
-  initialPlatform?: Platform | null;
+  onSubmit: (data: Application | Omit<Application, 'id'>) => void | Promise<void>;
+  onCancel: () => void;
 }
 
 const ApplicationForm: React.FC<ApplicationFormProps> = ({ 
-  onSubmit, 
-  onCancel, 
   initialData,
-  initialPlatform 
+  onSubmit,
+  onCancel
 }) => {
-  const [formData, setFormData] = useState<Omit<Application, 'id'>>({
-    platform: initialData?.platform || initialPlatform || 'LinkedIn',
-    date: initialData?.date || new Date().toISOString().substring(0, 10),
-    position: initialData?.position || 'Frontend',
-    company: initialData?.company || '',
-    status: initialData?.status || 'Applied',
-    notes: initialData?.notes || '',
+  const { t } = useTranslation();
+  
+  const [formData, setFormData] = useState<Partial<Application>>({
+    company: '',
+    position: 'Frontend',
+    platform: 'LinkedIn',
+    status: 'Applied',
+    date: new Date().toISOString().substring(0, 10),
+    remote: false,
+    favorite: false,
+    folder: 'responses'
   });
   
+  // Установка начальных данных при редактировании
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+    }
+  }, [initialData]);
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    const { name, value, type } = e.target;
+    
+    if (type === 'checkbox') {
+      const isChecked = (e.target as HTMLInputElement).checked;
+      setFormData(prev => ({ ...prev, [name]: isChecked }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const newApplication: Application = {
-      id: initialData?.id || uuidv4(),
-      ...formData
-    };
-    
-    onSubmit(newApplication);
+    // Если редактирование - сохраняем с тем же id
+    if (initialData?.id) {
+      onSubmit({
+        ...formData,
+        id: initialData.id
+      } as Application);
+    } else {
+      // Если новая запись - id будет сгенерирован в handleAddApplication
+      onSubmit(formData as Omit<Application, 'id'>);
+    }
   };
   
+  const isEdit = Boolean(initialData?.id);
+  
   return (
-    <FormContainer>
-      <FormTitle>
-        {initialData ? 'Редактировать отклик' : 'Добавить новый отклик'}
-      </FormTitle>
-      
-      <form onSubmit={handleSubmit}>
-        <FormGroup>
-          <Label htmlFor="platform">Платформа</Label>
-          <Select 
-            id="platform"
-            name="platform"
-            value={formData.platform}
-            onChange={handleChange}
-          >
-            <option value="LinkedIn">LinkedIn</option>
-            <option value="Glassdoor">Glassdoor</option>
-            <option value="HeadHunter">HeadHunter</option>
-            <option value="Other">Другое</option>
-          </Select>
-        </FormGroup>
+    <FormOverlay
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <FormContainer
+        initial={{ y: 50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: 'spring', damping: 25 }}
+      >
+        <FormTitle>
+          {isEdit ? t('form.editApplication') || 'Редактировать заявку' : t('form.addApplication') || 'Добавить заявку'}
+        </FormTitle>
         
-        <FormGroup>
-          <Label htmlFor="date">Дата отклика</Label>
-          <Input 
-            type="date"
-            id="date"
-            name="date"
-            value={formData.date}
-            onChange={handleChange}
-            required
-          />
-        </FormGroup>
-        
-        <FormGroup>
-          <Label htmlFor="position">Должность</Label>
-          <Select
-            id="position"
-            name="position"
-            value={formData.position}
-            onChange={handleChange}
-            required
-          >
-            <option value="Frontend">Frontend Developer</option>
-            <option value="Backend">Backend Developer</option>
-            <option value="Fullstack">Fullstack Developer</option>
-            <option value="DevOps">DevOps Engineer</option>
-            <option value="QA">QA Engineer</option>
-            <option value="UX/UI">UX/UI Designer</option>
-            <option value="Data Science">Data Scientist</option>
-            <option value="Other">Другое</option>
-          </Select>
-        </FormGroup>
-        
-        <FormGroup>
-          <Label htmlFor="company">Компания</Label>
-          <Input 
-            type="text"
-            id="company"
-            name="company"
-            value={formData.company}
-            onChange={handleChange}
-            placeholder="Например: Google"
-            required
-          />
-        </FormGroup>
-        
-        <FormGroup>
-          <Label htmlFor="status">Статус</Label>
-          <Select 
-            id="status"
-            name="status"
-            value={formData.status}
-            onChange={handleChange}
-          >
-            <option value="Applied">Отправлено</option>
-            <option value="Viewed">Просмотрено</option>
-            <option value="Interview">Интервью</option>
-            <option value="Offer">Получен оффер</option>
-            <option value="Rejected">Отказ</option>
-          </Select>
-        </FormGroup>
-        
-        <FormGroup>
-          <Label htmlFor="notes">Заметки</Label>
-          <Textarea 
-            id="notes"
-            name="notes"
-            value={formData.notes}
-            onChange={handleChange}
-            placeholder="Дополнительная информация..."
-          />
-        </FormGroup>
-        
-        <ButtonGroup>
-          <Button 
-            type="button" 
-            variant="outline"
-            onClick={onCancel}
-          >
-            Отмена
-          </Button>
+        <form onSubmit={handleSubmit}>
+          <FormGroup>
+            <Label htmlFor="company">{t('form.company')}</Label>
+            <Input
+              type="text"
+              id="company"
+              name="company"
+              value={formData.company || ''}
+              onChange={handleChange}
+              placeholder={t('form.companyPlaceholder') || 'Например: Яндекс'}
+              required
+            />
+          </FormGroup>
           
-          <Button 
-            type="submit" 
-            variant="primary"
-          >
-            {initialData ? 'Сохранить' : 'Добавить'}
-          </Button>
-        </ButtonGroup>
-      </form>
-    </FormContainer>
+          <Row>
+            <FormGroup>
+              <Label htmlFor="position">{t('form.position')}</Label>
+              <Select
+                id="position"
+                name="position"
+                value={formData.position || 'Frontend'}
+                onChange={handleChange}
+                required
+              >
+                <option value="Frontend">Frontend</option>
+                <option value="Backend">Backend</option>
+                <option value="Fullstack">Fullstack</option>
+                <option value="DevOps">DevOps</option>
+                <option value="QA">QA</option>
+                <option value="UX/UI">UX/UI</option>
+                <option value="Data Science">Data Science</option>
+                <option value="Other">Другое</option>
+              </Select>
+            </FormGroup>
+            
+            <FormGroup>
+              <Label htmlFor="platform">{t('form.platform')}</Label>
+              <Select
+                id="platform"
+                name="platform"
+                value={formData.platform || 'LinkedIn'}
+                onChange={handleChange}
+                required
+              >
+                <option value="LinkedIn">LinkedIn</option>
+                <option value="Glassdoor">Glassdoor</option>
+                <option value="HeadHunter">HeadHunter</option>
+                <option value="Indeed">Indeed</option>
+                <option value="Прямой контакт">Прямой контакт</option>
+                <option value="Other">Другое</option>
+              </Select>
+            </FormGroup>
+          </Row>
+          
+          <Row>
+            <FormGroup>
+              <Label htmlFor="date">{t('form.date')}</Label>
+              <Input
+                type="date"
+                id="date"
+                name="date"
+                value={formData.date || new Date().toISOString().substring(0, 10)}
+                onChange={handleChange}
+                required
+              />
+            </FormGroup>
+            
+            <FormGroup>
+              <Label htmlFor="status">{t('form.status')}</Label>
+              <Select
+                id="status"
+                name="status"
+                value={formData.status || 'Applied'}
+                onChange={handleChange}
+                required
+              >
+                <option value="Applied">Отправлено</option>
+                <option value="Viewed">Просмотрено</option>
+                <option value="Interview">Интервью</option>
+                <option value="Offer">Оффер</option>
+                <option value="Rejected">Отказ</option>
+              </Select>
+            </FormGroup>
+          </Row>
+          
+          <FormGroup>
+            <Label htmlFor="salary">{t('form.salary')}</Label>
+            <Input
+              type="number"
+              id="salary"
+              name="salary"
+              value={formData.salary || ''}
+              onChange={handleChange}
+              placeholder={t('form.salaryPlaceholder') || 'Зарплата в рублях'}
+            />
+          </FormGroup>
+          
+          <FormGroup>
+            <Label htmlFor="location">{t('form.location')}</Label>
+            <Input
+              type="text"
+              id="location"
+              name="location"
+              value={formData.location || ''}
+              onChange={handleChange}
+              placeholder={t('form.locationPlaceholder') || 'Например: Москва'}
+            />
+          </FormGroup>
+          
+          <FormGroup>
+            <CheckboxLabel>
+              <Checkbox
+                type="checkbox"
+                name="remote"
+                checked={Boolean(formData.remote)}
+                onChange={handleChange}
+              />
+              {t('form.remote')}
+            </CheckboxLabel>
+          </FormGroup>
+          
+          <FormGroup>
+            <CheckboxLabel>
+              <Checkbox
+                type="checkbox"
+                name="favorite"
+                checked={Boolean(formData.favorite)}
+                onChange={handleChange}
+              />
+              {t('form.favorite')}
+            </CheckboxLabel>
+          </FormGroup>
+          
+          <FormGroup>
+            <Label htmlFor="notes">{t('form.notes')}</Label>
+            <Textarea
+              id="notes"
+              name="notes"
+              value={formData.notes || ''}
+              onChange={handleChange}
+              placeholder={t('form.notesPlaceholder') || 'Ваши заметки о вакансии'}
+            />
+          </FormGroup>
+          
+          <FormActions>
+            <Button variant="outline" type="button" onClick={onCancel}>
+              {t('common.cancel')}
+            </Button>
+            
+            <Button variant="primary" type="submit">
+              {isEdit ? t('common.save') || 'Сохранить' : t('common.add') || 'Добавить'}
+            </Button>
+          </FormActions>
+        </form>
+      </FormContainer>
+    </FormOverlay>
   );
 };
 
