@@ -10,6 +10,7 @@ import {
   FaThLarge, FaGlobe, FaExchangeAlt, FaFingerprint, FaShieldAlt
 } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -321,73 +322,102 @@ const ButtonWithMargin = styled(Button)`
 
 const Settings: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { 
-    theme, 
+    theme,
+    language,
     defaultView, 
     notificationsEnabled, 
     autoSaveInterval,
     statisticsVisibility,
+    primaryColor,
     toggleTheme,
+    changeLanguage,
     setDefaultView,
     toggleNotifications,
     setAutoSaveInterval,
     toggleStatVisibility,
-    resetSettings
+    resetSettings,
+    setPrimaryColor
   } = useSettings();
+  
+  const { t } = useTranslation();
   
   const [exportSuccess, setExportSuccess] = useState(false);
   const [importSuccess, setImportSuccess] = useState(false);
   const [showConfirmReset, setShowConfirmReset] = useState(false);
   const [activeTab, setActiveTab] = useState<'appearance' | 'notifications' | 'statistics' | 'data'>('appearance');
-  
-  const handleExport = () => {
-    const data = exportData();
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `job-applications-export-${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    setExportSuccess(true);
-    setTimeout(() => setExportSuccess(false), 3000);
+  const [showResetConfirmation, setShowResetConfirmation] = useState(false);
+
+  const colors = {
+    purple: '#5856D6',
+    orange: '#FF9500',
+    green: '#4CD964',
+    blue: '#5AC8FA',
+    red: '#FF2D55',
+    indigo: '#007AFF'
   };
-  
+
+  const handleExport = () => {
+    try {
+      const data = exportData();
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `job-applications-export-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setExportSuccess(true);
+      setTimeout(() => setExportSuccess(false), 3000);
+    } catch (error) {
+      console.error('Export error:', error);
+      // Показать сообщение об ошибке
+    }
+  };
+
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     
     const reader = new FileReader();
     reader.onload = (e) => {
-      const content = e.target?.result as string;
-      if (content) {
-        const success = importData(content);
-        setImportSuccess(success);
-        setTimeout(() => setImportSuccess(false), 3000);
-        
-        if (success) {
-          // Перезагрузка страницы для применения импортированных данных
-          window.location.reload();
+      try {
+        const content = e.target?.result as string;
+        if (content) {
+          const success = importData(content);
+          setImportSuccess(success);
+          setTimeout(() => setImportSuccess(false), 3000);
+          
+          if (success) {
+            window.location.reload();
+          }
         }
+      } catch (error) {
+        console.error('Import error:', error);
+        // Показать сообщение об ошибке
       }
     };
     reader.readAsText(file);
   };
-  
+
   const handleClearData = () => {
     if (showConfirmReset) {
-      clearAllData();
-      setShowConfirmReset(false);
-      // Перезагрузка страницы для очистки данных
-      window.location.reload();
+      try {
+        clearAllData();
+        resetSettings();
+        setShowConfirmReset(false);
+        window.location.reload();
+      } catch (error) {
+        console.error('Clear data error:', error);
+        // Показать сообщение об ошибке
+      }
     } else {
       setShowConfirmReset(true);
     }
   };
 
-  // Автоматически убираем состояние подтверждения через 5 секунд
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
     if (showConfirmReset) {
@@ -399,15 +429,15 @@ const Settings: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       if (timer) clearTimeout(timer);
     };
   }, [showConfirmReset]);
-  
+
   return (
     <SettingsContainer>
       <SettingsHeader>
         <SettingsTitle>
           <BackButton variant="secondary" onClick={onBack}>
-            <FaArrowLeft /> Назад
+            <FaArrowLeft /> {t('stats.back')}
           </BackButton>
-          Настройки
+          {t('common.settings')}
         </SettingsTitle>
       </SettingsHeader>
 
@@ -416,25 +446,25 @@ const Settings: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           active={activeTab === 'appearance'} 
           onClick={() => setActiveTab('appearance')}
         >
-          <FaPalette /> Внешний вид
+          <FaPalette /> {t('settings.tabs.appearance')}
         </Tab>
         <Tab 
           active={activeTab === 'notifications'} 
           onClick={() => setActiveTab('notifications')}
         >
-          <FaBell /> Уведомления
+          <FaBell /> {t('settings.tabs.notifications')}
         </Tab>
         <Tab 
           active={activeTab === 'statistics'} 
           onClick={() => setActiveTab('statistics')}
         >
-          <FaChartBar /> Статистика
+          <FaChartBar /> {t('settings.tabs.statistics')}
         </Tab>
         <Tab 
           active={activeTab === 'data'} 
           onClick={() => setActiveTab('data')}
         >
-          <FaCog /> Данные
+          <FaCog /> {t('settings.tabs.data')}
         </Tab>
       </TabContainer>
       
@@ -450,17 +480,18 @@ const Settings: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             <SettingsGrid>
               <SettingsCard padding="medium" elevation="small">
                 <SectionTitle>
-                  <FaPalette size={20} /> Основные настройки
+                  <FaPalette size={20} /> {t('settings.appearance.title')}
                 </SectionTitle>
                 
                 <SettingSection>
                   <SettingItem>
                     <div>
                       <SettingLabel>
-                        {theme === 'dark' ? <FaMoon size={18} /> : <FaSun size={18} />} {theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
+                        {theme === 'dark' ? <FaMoon size={18} /> : <FaSun size={18} />} 
+                        {t('settings.appearance.theme')}
                       </SettingLabel>
                       <SettingDescription>
-                        Изменить цветовую схему интерфейса
+                        {t('settings.appearance.themeDescription')}
                       </SettingDescription>
                     </div>
                     <Switch>
@@ -476,48 +507,16 @@ const Settings: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   <SettingItem>
                     <div>
                       <SettingLabel>
-                        {defaultView === 'list' ? <FaListUl size={18} /> : <FaThLarge size={18} />} Вид по умолчанию
+                        <FaGlobe size={18} /> {t('settings.appearance.language')}
                       </SettingLabel>
                       <SettingDescription>
-                        Выберите предпочтительный способ отображения заявок
+                        {t('settings.appearance.languageDescription')}
                       </SettingDescription>
                     </div>
-                    <div>
-                      <Button 
-                        variant={defaultView === 'list' ? 'primary' : 'secondary'} 
-                        onClick={() => setDefaultView('list')}
-                        size="small"
-                      >
-                        <FaListUl /> Список
-                      </Button>
-                      <ButtonWithMargin 
-                        variant={defaultView === 'kanban' ? 'primary' : 'secondary'} 
-                        onClick={() => setDefaultView('kanban')}
-                        size="small"
-                      >
-                        <FaThLarge /> Канбан
-                      </ButtonWithMargin>
-                    </div>
-                  </SettingItem>
-                </SettingSection>
-              </SettingsCard>
-              
-              <SettingsCard padding="medium" elevation="small">
-                <SectionTitle>
-                  <FaFingerprint size={20} /> Персонализация
-                </SectionTitle>
-                
-                <SettingSection>
-                  <SettingItem>
-                    <div>
-                      <SettingLabel>
-                        <FaGlobe size={18} /> Язык приложения
-                      </SettingLabel>
-                      <SettingDescription>
-                        Выберите предпочтительный язык интерфейса
-                      </SettingDescription>
-                    </div>
-                    <Select defaultValue="ru">
+                    <Select 
+                      value={language} 
+                      onChange={(e) => changeLanguage(e.target.value as 'ru' | 'en')}
+                    >
                       <option value="ru">Русский</option>
                       <option value="en">English</option>
                     </Select>
@@ -526,19 +525,57 @@ const Settings: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   <SettingItem>
                     <div>
                       <SettingLabel>
-                        <FaPalette size={18} /> Основной цвет
+                        {defaultView === 'list' ? <FaListUl size={18} /> : <FaThLarge size={18} />} 
+                        {t('settings.appearance.defaultView')}
                       </SettingLabel>
                       <SettingDescription>
-                        Выберите основной цвет интерфейса
+                        {t('settings.appearance.defaultViewDescription')}
+                      </SettingDescription>
+                    </div>
+                    <div>
+                      <Button 
+                        variant={defaultView === 'list' ? 'primary' : 'secondary'} 
+                        onClick={() => setDefaultView('list')}
+                        size="small"
+                      >
+                        <FaListUl /> {t('common.list')}
+                      </Button>
+                      <ButtonWithMargin 
+                        variant={defaultView === 'kanban' ? 'primary' : 'secondary'} 
+                        onClick={() => setDefaultView('kanban')}
+                        size="small"
+                      >
+                        <FaThLarge /> {t('common.kanban')}
+                      </ButtonWithMargin>
+                    </div>
+                  </SettingItem>
+                </SettingSection>
+              </SettingsCard>
+              
+              <SettingsCard padding="medium" elevation="small">
+                <SectionTitle>
+                  <FaFingerprint size={20} /> {t('settings.appearance.personalization')}
+                </SectionTitle>
+                
+                <SettingSection>
+                  <SettingItem>
+                    <div>
+                      <SettingLabel>
+                        <FaPalette size={18} /> {t('settings.appearance.primaryColor')}
+                      </SettingLabel>
+                      <SettingDescription>
+                        {t('settings.appearance.primaryColorDescription')}
                       </SettingDescription>
                       
                       <ColorOptionsContainer>
-                        <ColorOption color="#5856D6" selected={true} />
-                        <ColorOption color="#FF9500" selected={false} />
-                        <ColorOption color="#4CD964" selected={false} />
-                        <ColorOption color="#5AC8FA" selected={false} />
-                        <ColorOption color="#FF2D55" selected={false} />
-                        <ColorOption color="#007AFF" selected={false} />
+                        {Object.entries(colors).map(([name, color]) => (
+                          <ColorOption 
+                            key={color}
+                            color={color} 
+                            selected={primaryColor === color}
+                            onClick={() => setPrimaryColor(color)}
+                          />
+                        ))}
                       </ColorOptionsContainer>
                     </div>
                   </SettingItem>
@@ -551,17 +588,17 @@ const Settings: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             <SettingsGrid>
               <SettingsCard padding="medium" elevation="small">
                 <SectionTitle>
-                  <FaBell size={20} /> Уведомления
+                  <FaBell size={20} /> {t('settings.notifications.title')}
                 </SectionTitle>
                 
                 <SettingSection>
                   <SettingItem>
                     <div>
                       <SettingLabel>
-                        <FaBell size={18} /> Включить уведомления
+                        <FaBell size={18} /> {t('settings.notifications.enable')}
                       </SettingLabel>
                       <SettingDescription>
-                        Получать уведомления о важных событиях
+                        {t('settings.notifications.enableDescription')}
                       </SettingDescription>
                     </div>
                     <Switch>
@@ -578,28 +615,28 @@ const Settings: React.FC<{ onBack: () => void }> = ({ onBack }) => {
               
               <SettingsCard padding="medium" elevation="small">
                 <SectionTitle>
-                  <FaExchangeAlt size={20} /> Автосохранение
+                  <FaExchangeAlt size={20} /> {t('settings.notifications.autoSave')}
                 </SectionTitle>
                 
                 <SettingSection>
                   <SettingItem>
                     <div>
                       <SettingLabel>
-                        <FaExchangeAlt size={18} /> Интервал автосохранения
+                        <FaExchangeAlt size={18} /> {t('settings.notifications.autoSaveDescription')}
                       </SettingLabel>
                       <SettingDescription>
-                        Как часто автоматически сохранять изменения (в минутах)
+                        {t('settings.notifications.autoSaveDescription')}
                       </SettingDescription>
                     </div>
                     <Select 
                       value={autoSaveInterval} 
                       onChange={(e) => setAutoSaveInterval(Number(e.target.value))}
                     >
-                      <option value={1}>1 минута</option>
-                      <option value={5}>5 минут</option>
-                      <option value={10}>10 минут</option>
-                      <option value={15}>15 минут</option>
-                      <option value={30}>30 минут</option>
+                      <option value={1}>1 {t('common.minute')}</option>
+                      <option value={5}>5 {t('common.minutes')}</option>
+                      <option value={10}>10 {t('common.minutes')}</option>
+                      <option value={15}>15 {t('common.minutes')}</option>
+                      <option value={30}>30 {t('common.minutes')}</option>
                     </Select>
                   </SettingItem>
                 </SettingSection>
@@ -608,192 +645,156 @@ const Settings: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           )}
           
           {activeTab === 'statistics' && (
-            <SettingsCard padding="medium" elevation="small">
-              <SectionTitle>
-                <FaChartBar size={20} /> Настройки статистики
-              </SectionTitle>
-              
-              <SettingSection>
-                <SettingItem>
-                  <div>
-                    <SettingLabel>
-                      <FaGlobe size={18} /> Показывать платформы
-                    </SettingLabel>
-                    <SettingDescription>
-                      Статистика по используемым платформам поиска работы
-                    </SettingDescription>
-                  </div>
-                  <Switch>
-                    <input 
-                      type="checkbox" 
-                      checked={statisticsVisibility.platforms} 
-                      onChange={() => toggleStatVisibility('platforms')}
-                    />
-                    <span></span>
-                  </Switch>
-                </SettingItem>
+            <SettingsGrid>
+              <SettingsCard padding="medium" elevation="small">
+                <SectionTitle>
+                  <FaChartBar size={20} /> {t('settings.statistics.title')}
+                </SectionTitle>
                 
-                <SettingItem>
-                  <div>
-                    <SettingLabel>
-                      <FaChartBar size={18} /> Показывать временную шкалу
-                    </SettingLabel>
-                    <SettingDescription>
-                      График активности заявок по времени
-                    </SettingDescription>
-                  </div>
-                  <Switch>
-                    <input 
-                      type="checkbox" 
-                      checked={statisticsVisibility.timeline} 
-                      onChange={() => toggleStatVisibility('timeline')}
-                    />
-                    <span></span>
-                  </Switch>
-                </SettingItem>
-                
-                <SettingItem>
-                  <div>
-                    <SettingLabel>
-                      <FaChartBar size={18} /> Показывать статусы
-                    </SettingLabel>
-                    <SettingDescription>
-                      Распределение заявок по текущим статусам
-                    </SettingDescription>
-                  </div>
-                  <Switch>
-                    <input 
-                      type="checkbox" 
-                      checked={statisticsVisibility.statuses} 
-                      onChange={() => toggleStatVisibility('statuses')}
-                    />
-                    <span></span>
-                  </Switch>
-                </SettingItem>
-                
-                <SettingItem>
-                  <div>
-                    <SettingLabel>
-                      <FaChartBar size={18} /> Показывать зарплаты
-                    </SettingLabel>
-                    <SettingDescription>
-                      Анализ уровня зарплат в заявках
-                    </SettingDescription>
-                  </div>
-                  <Switch>
-                    <input 
-                      type="checkbox" 
-                      checked={statisticsVisibility.salary} 
-                      onChange={() => toggleStatVisibility('salary')}
-                    />
-                    <span></span>
-                  </Switch>
-                </SettingItem>
-              </SettingSection>
-            </SettingsCard>
+                <SettingSection>
+                  {Object.entries(statisticsVisibility).map(([key, value]) => (
+                    <SettingItem key={key}>
+                      <div>
+                        <SettingLabel>
+                          <FaChartBar size={18} /> {t(`settings.statistics.${key}`)}
+                        </SettingLabel>
+                        <SettingDescription>
+                          {t(`settings.statistics.${key}Description`)}
+                        </SettingDescription>
+                      </div>
+                      <Switch>
+                        <input 
+                          type="checkbox" 
+                          checked={value} 
+                          onChange={() => toggleStatVisibility(key as keyof typeof statisticsVisibility)}
+                        />
+                        <span></span>
+                      </Switch>
+                    </SettingItem>
+                  ))}
+                </SettingSection>
+              </SettingsCard>
+            </SettingsGrid>
           )}
           
           {activeTab === 'data' && (
-            <SettingsCard padding="medium" elevation="small">
-              <SectionTitle>
-                <FaShieldAlt size={20} /> Управление данными
-              </SectionTitle>
-              
-              <SettingSection>
-                <SettingItem>
-                  <div>
-                    <SettingLabel>
-                      <FaSave size={18} /> Экспорт данных
-                    </SettingLabel>
-                    <SettingDescription>
-                      Сохранить текущие данные в JSON-файл
-                    </SettingDescription>
-                  </div>
-                  <Button 
-                    variant="primary" 
-                    onClick={handleExport}
-                  >
-                    <FaSave /> Экспорт
-                  </Button>
-                </SettingItem>
+            <SettingsGrid>
+              <SettingsCard padding="medium" elevation="small">
+                <SectionTitle>
+                  <FaShieldAlt size={20} /> {t('settings.data.title')}
+                </SectionTitle>
                 
-                <SettingItem>
-                  <div>
-                    <SettingLabel>
-                      <FaUpload size={18} /> Импорт данных
-                    </SettingLabel>
-                    <SettingDescription>
-                      Загрузить данные из ранее сохраненного файла
-                    </SettingDescription>
-                  </div>
-                  <FileInputLabel>
-                    <FileInput 
-                      type="file" 
-                      accept=".json" 
-                      onChange={handleImport} 
-                      id="import-file"
-                    />
+                <SettingSection>
+                  <SettingItem>
+                    <div>
+                      <SettingLabel>
+                        <FaSave size={18} /> {t('settings.data.export')}
+                      </SettingLabel>
+                      <SettingDescription>
+                        {t('settings.data.exportDescription')}
+                      </SettingDescription>
+                    </div>
                     <Button 
-                      as="span" 
-                      variant="secondary"
+                      variant="primary" 
+                      onClick={handleExport}
                     >
-                      <FaUpload /> Импорт
+                      <FaSave /> {t('common.export')}
                     </Button>
-                  </FileInputLabel>
-                </SettingItem>
-                
-                <SettingItem>
-                  <div>
-                    <SettingLabel>
-                      <FaTrash size={18} /> Очистить все данные
-                    </SettingLabel>
-                    <SettingDescription>
-                      Безвозвратно удалить все заявки и настройки
-                    </SettingDescription>
-                  </div>
-                  <Button 
-                    variant="danger" 
-                    onClick={handleClearData}
-                  >
-                    <FaTrash /> {showConfirmReset ? 'Подтвердить' : 'Очистить'}
-                  </Button>
-                </SettingItem>
-                
+                  </SettingItem>
+                  
+                  <SettingItem>
+                    <div>
+                      <SettingLabel>
+                        <FaUpload size={18} /> {t('settings.data.import')}
+                      </SettingLabel>
+                      <SettingDescription>
+                        {t('settings.data.importDescription')}
+                      </SettingDescription>
+                    </div>
+                    <FileInputLabel>
+                      <FileInput 
+                        type="file" 
+                        accept=".json" 
+                        onChange={handleImport} 
+                      />
+                      <Button 
+                        as="span" 
+                        variant="secondary"
+                      >
+                        <FaUpload /> {t('common.import')}
+                      </Button>
+                    </FileInputLabel>
+                  </SettingItem>
+                  
+                  <SettingItem>
+                    <div>
+                      <SettingLabel>
+                        <FaTrash size={18} /> {t('settings.data.reset')}
+                      </SettingLabel>
+                      <SettingDescription>
+                        {t('settings.data.resetDescription')}
+                      </SettingDescription>
+                    </div>
+                    <Button 
+                      variant="danger"
+                      onClick={handleClearData}
+                    >
+                      <FaTrash /> {showConfirmReset ? t('common.confirm') : t('common.reset')}
+                    </Button>
+                  </SettingItem>
+                </SettingSection>
+
                 <AnimatePresence>
                   {exportSuccess && (
                     <SuccessMessage
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
                     >
-                      Данные успешно экспортированы!
+                      {t('settings.data.exportSuccess')}
                     </SuccessMessage>
                   )}
-                  
                   {importSuccess && (
                     <SuccessMessage
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
                     >
-                      Данные успешно импортированы!
+                      {t('settings.data.importSuccess')}
                     </SuccessMessage>
                   )}
-                  
-                  {showConfirmReset && (
-                    <DangerMessage
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                    >
-                      Вы уверены? Это действие нельзя отменить. Нажмите кнопку еще раз для подтверждения.
-                    </DangerMessage>
-                  )}
                 </AnimatePresence>
-              </SettingSection>
-            </SettingsCard>
+              </SettingsCard>
+            </SettingsGrid>
           )}
         </motion.div>
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {(exportSuccess || importSuccess || showConfirmReset) && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1000 }}
+          >
+            {exportSuccess && (
+              <SuccessMessage>
+                {t('settings.data.exportSuccess')}
+              </SuccessMessage>
+            )}
+            {importSuccess && (
+              <SuccessMessage>
+                {t('settings.data.importSuccess')}
+              </SuccessMessage>
+            )}
+            {showConfirmReset && (
+              <DangerMessage>
+                {t('settings.data.resetConfirmation')}
+              </DangerMessage>
+            )}
+          </motion.div>
+        )}
       </AnimatePresence>
     </SettingsContainer>
   );

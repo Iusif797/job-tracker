@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
-import { userApi } from '../../services/api';
+import { updateProfile } from 'firebase/auth';
 import Button from '../shared/Button';
 import { FaSave, FaUser } from 'react-icons/fa';
 
@@ -87,29 +87,36 @@ const ProfilePage: React.FC = () => {
   const { t } = useTranslation();
   const { user, setUser } = useAuth();
   
-  const [name, setName] = useState(user?.name || '');
+  const [name, setName] = useState(user?.displayName || '');
   const [email, setEmail] = useState(user?.email || '');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setName(user.displayName || '');
+      setEmail(user.email || '');
+    }
+  }, [user]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
-    
-    if (!name.trim()) {
-      setError(t('validation.nameRequired'));
-      return;
-    }
-    
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+
     try {
-      setLoading(true);
-      const updatedUser = await userApi.updateProfile({ name });
-      setUser({ name: updatedUser.name });
-      setSuccess(t('profile.updateSuccess'));
-    } catch (err: any) {
-      setError(err.message || t('errors.updateFailed'));
+      if (user) {
+        await updateProfile(user, {
+          displayName: name
+        });
+        setUser(user);
+        setSuccess(true);
+      }
+    } catch (err) {
+      console.error('Profile update error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update profile');
     } finally {
       setLoading(false);
     }
@@ -152,7 +159,7 @@ const ProfilePage: React.FC = () => {
         </FormGroup>
         
         {error && <ErrorMessage>{error}</ErrorMessage>}
-        {success && <SuccessMessage>{success}</SuccessMessage>}
+        {success && <SuccessMessage>{t('profile.updateSuccess')}</SuccessMessage>}
         
         <ProfileActions>
           <Button 

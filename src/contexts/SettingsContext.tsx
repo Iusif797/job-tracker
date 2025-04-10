@@ -10,6 +10,7 @@ interface SettingsContextType extends AppSettings {
   setAutoSaveInterval: (minutes: number) => void;
   toggleStatVisibility: (stat: keyof typeof defaultSettings.statisticsVisibility) => void;
   resetSettings: () => void;
+  setPrimaryColor: (color: string) => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -107,6 +108,13 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     i18n.changeLanguage(defaultSettings.language);
   };
 
+  const setPrimaryColor = (color: string) => {
+    setSettings(prev => ({
+      ...prev,
+      primaryColor: color
+    }));
+  };
+
   // Отображаем ничего до завершения инициализации контекста
   if (!isInitialized) {
     return null;
@@ -122,7 +130,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         toggleNotifications,
         setAutoSaveInterval,
         toggleStatVisibility,
-        resetSettings
+        resetSettings,
+        setPrimaryColor
       }}
     >
       {children}

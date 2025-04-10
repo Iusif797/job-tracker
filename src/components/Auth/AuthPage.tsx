@@ -1,11 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { useAuth } from '../../contexts/AuthContext';
-import LoginForm from './LoginForm';
-import RegisterForm from './RegisterForm';
 import { motion, AnimatePresence } from 'framer-motion';
-import { keyframes } from 'styled-components';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../contexts/AuthContext';
+import { LoginForm } from './LoginForm';
+import { RegisterForm } from './RegisterForm';
+
+// Создаем простой компонент Logo
+const LogoComponent = styled.div<{ size: number }>`
+  width: ${props => props.size}px;
+  height: ${props => props.size}px;
+  background-color: ${({ theme }) => theme.colors.primary};
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: ${props => props.size * 0.4}px;
+`;
+
+const Logo = ({ size = 40 }: { size?: number }) => (
+  <LogoComponent size={size}>JT</LogoComponent>
+);
 
 const AuthContainer = styled.div`
   display: flex;
@@ -13,103 +31,111 @@ const AuthContainer = styled.div`
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  padding: 2rem;
-  background: linear-gradient(-45deg, 
-    ${({ theme }) => theme.colors.primary}, 
-    ${({ theme }) => theme.colors.secondary}, 
-    ${({ theme }) => theme.colors.primary}, 
-    ${({ theme }) => theme.colors.info || '#2AC9DE'}
-  );
+  padding: 1rem;
+  background: ${({ theme }) => theme.colors.gradients.primary};
   background-size: 400% 400%;
-  animation: ${keyframes`
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  `} 15s ease infinite;
+  animation: gradientAnimation 15s ease infinite;
+  
+  @keyframes gradientAnimation {
+    0% { background-position: 0% 50% }
+    50% { background-position: 100% 50% }
+    100% { background-position: 0% 50% }
+  }
 `;
 
 const AuthCard = styled(motion.div)`
   width: 100%;
-  max-width: 450px;
-  padding: 2rem;
-  background-color: ${({ theme }) => theme.colors.surface};
-  border-radius: ${({ theme }) => theme.radius.large};
+  max-width: 460px;
+  background: ${({ theme }) => theme.colors.surface};
+  padding: 2.5rem;
+  border-radius: ${({ theme }) => theme.borderRadius.large};
   box-shadow: ${({ theme }) => theme.shadows.large};
-  position: relative;
-  overflow: hidden;
-  margin-top: 2rem;
+  
+  @media (max-width: ${({ theme }) => theme.breakpoints.mobile}) {
+    padding: 2rem 1.5rem;
+    max-width: 95%;
+  }
 `;
 
-const Logo = styled.div`
-  font-size: 2rem;
+const LogoContainer = styled.div`
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const AppTitle = styled.h1`
+  font-size: 1.8rem;
   font-weight: 700;
-  color: white;
+  margin: 0.5rem 0;
   text-align: center;
-  margin-bottom: 1rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: ${({ theme }) => theme.colors.primary};
 `;
 
-const Subtitle = styled.div`
-  font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.9);
+const AppSubtitle = styled.p`
+  color: ${({ theme }) => theme.colors.textSecondary};
+  font-size: 1rem;
   text-align: center;
-  max-width: 450px;
-  margin: 0 auto;
+  margin-bottom: 1.5rem;
 `;
 
-const variants = {
-  initial: { opacity: 0, x: 100 },
-  animate: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: -100 }
+const FormContainer = styled(motion.div)`
+  width: 100%;
+`;
+
+// Анимация для переключения между формами
+const formVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+  exit: { opacity: 0, y: -10, transition: { duration: 0.2 } }
 };
 
 const AuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const { isAuthenticated, user } = useAuth();
+  const { t } = useTranslation();
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  
-  // Перенаправление, если пользователь уже авторизован
+
   useEffect(() => {
+    // Перенаправление на главную страницу, если пользователь уже авторизован
     if (isAuthenticated && user) {
       navigate('/');
     }
   }, [isAuthenticated, user, navigate]);
-  
-  // Если пользователь авторизован, перенаправляем на главную
-  if (isAuthenticated && user) {
-    return <Navigate to="/" />;
-  }
-  
+
+  const toggleAuthMode = () => {
+    setIsLogin(!isLogin);
+  };
+
   return (
     <AuthContainer>
-      <Logo>JobTracker</Logo>
-      <Subtitle>Отслеживайте все отклики по работе в одном месте</Subtitle>
-      
-      <AnimatePresence mode="wait">
-        {isLogin ? (
-          <AuthCard
-            key="login"
-            initial="initial"
-            animate="animate"
+      <AuthCard 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <LogoContainer>
+          <Logo size={50} />
+          <AppTitle>{t('auth.appTitle')}</AppTitle>
+          <AppSubtitle>{t('auth.appDescription')}</AppSubtitle>
+        </LogoContainer>
+
+        <AnimatePresence mode="wait">
+          <FormContainer
+            key={isLogin ? 'login' : 'register'}
+            variants={formVariants}
+            initial="hidden"
+            animate="visible"
             exit="exit"
-            variants={variants}
-            transition={{ duration: 0.3 }}
           >
-            <LoginForm onRegisterClick={() => setIsLogin(false)} />
-          </AuthCard>
-        ) : (
-          <AuthCard
-            key="register"
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            variants={variants}
-            transition={{ duration: 0.3 }}
-          >
-            <RegisterForm onLoginClick={() => setIsLogin(true)} />
-          </AuthCard>
-        )}
-      </AnimatePresence>
+            {isLogin ? (
+              <LoginForm onToggleAuth={toggleAuthMode} />
+            ) : (
+              <RegisterForm onToggleAuth={toggleAuthMode} />
+            )}
+          </FormContainer>
+        </AnimatePresence>
+      </AuthCard>
     </AuthContainer>
   );
 };

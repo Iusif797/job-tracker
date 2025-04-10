@@ -1,144 +1,118 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import { useTranslation } from 'react-i18next';
-import { authApi } from '../services/api';
-import { User } from '../types/user';
-
-interface AuthUser {
-  id: string;
-  name: string;
-  email: string;
-  token: string;
-}
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { 
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  updateProfile,
+  User
+} from 'firebase/auth';
+import { auth } from '../config/firebase';
 
 interface AuthContextType {
-  user: AuthUser | null;
+  currentUser: User | null;
+  user: User | null;  // Для обратной совместимости
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
   register: (name: string, email: string, password: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   clearError: () => void;
-  setUser: (user: any) => void;
+  setUser: (user: User | null) => void;  // Для обратной совместимости
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth должен использоваться внутри AuthProvider');
-  }
-  return context;
-};
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { t } = useTranslation();
 
   useEffect(() => {
-    // Проверка, есть ли сохраненный пользователь в localStorage
-    const storedUser = localStorage.getItem('jobTrackerUser');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+      setLoading(false);
+    });
+
+    return unsubscribe;
   }, []);
 
-  // Регистрация нового пользователя
   const register = async (name: string, email: string, password: string) => {
     try {
-      setLoading(true);
       setError(null);
-      
-      const response = await authApi.register({ name, email, password });
-      
-      // Сохраняем пользователя в localStorage и состояние
-      const userData = {
-        id: response.user.id,
-        name: response.user.name,
-        email: response.user.email,
-        token: response.token
-      };
-      
-      localStorage.setItem('jobTrackerUser', JSON.stringify(userData));
-      setUser(userData);
+      const { user } = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(user, { displayName: name });
+      setCurrentUser(user);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
-    } finally {
-      setLoading(false);
+      console.error('Registration error:', err);
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An error occurred during registration');
+      }
+      throw err;
     }
   };
-  
-  // Вход в систему
+
   const login = async (email: string, password: string) => {
     try {
-      setLoading(true);
       setError(null);
-      
-      const response = await authApi.login({ email, password });
-      
-      // Сохраняем пользователя в localStorage и состояние
-      const userData = {
-        id: response.user.id,
-        name: response.user.name,
-        email: response.user.email,
-        token: response.token
-      };
-      
-      localStorage.setItem('jobTrackerUser', JSON.stringify(userData));
-      setUser(userData);
+      const { user } = await signInWithEmailAndPassword(auth, email, password);
+      setCurrentUser(user);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
-    } finally {
-      setLoading(false);
+      console.error('Login error:', err);
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An error occurred during login');
+      }
+      throw err;
     }
   };
-  
-  // Выход из системы
-  const logout = () => {
-    authApi.logout()
-      .then(() => {
-        localStorage.removeItem('jobTrackerUser');
-        setUser(null);
-      })
-      .catch(() => {
-        localStorage.removeItem('jobTrackerUser');
-        setUser(null);
-      });
+
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      setCurrentUser(null);
+    } catch (err) {
+      console.error('Logout error:', err);
+      if (err instanceof Error) {
+        setError(err.message);
+      }
+    }
   };
-  
-  // Очистка ошибок
+
   const clearError = () => {
     setError(null);
   };
 
-  // Установка пользователя (используется в ProfilePage)
-  const setUserData = (userData: any) => {
-    const updatedUser = { ...user, ...userData };
-    localStorage.setItem('jobTrackerUser', JSON.stringify(updatedUser));
-    setUser(updatedUser);
+  const value = {
+    currentUser,
+    user: currentUser, // Для обратной совместимости
+    isAuthenticated: !!currentUser,
+    loading,
+    error,
+    register,
+    login,
+    logout,
+    clearError,
+    setUser: setCurrentUser // Для обратной совместимости
   };
 
   return (
-    <AuthContext.Provider 
-      value={{ 
-        user, 
-        isAuthenticated: !!user, 
-        loading, 
-        error, 
-        register, 
-        login, 
-        logout, 
-        clearError,
-        setUser: setUserData
-      }}
-    >
-      {children}
+    <AuthContext.Provider value={value}>
+      {!loading && children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };
 
 export default AuthContext; 

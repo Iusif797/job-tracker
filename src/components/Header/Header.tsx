@@ -1,19 +1,23 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { FaPlus, FaChartBar, FaGlobe, FaUser, FaSignOutAlt, FaBars, FaTimes } from 'react-icons/fa';
+import { FaPlus, FaChartBar, FaGlobe, FaUser, FaSignOutAlt, FaBars, FaTimes, FaCog } from 'react-icons/fa';
 import { BsSunFill, BsMoonFill } from 'react-icons/bs';
 import Button from '../shared/Button';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '../../contexts/SettingsContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { NavLink } from 'react-router-dom';
 
 const HeaderContainer = styled.header`
-  background-color: ${({ theme }) => theme.colors.surface};
+  background-color: ${({ theme }) => `${theme.colors.surface}CC`};
   padding: 1rem;
   box-shadow: ${({ theme }) => theme.shadows.small};
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 100;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid ${({ theme }) => theme.colors.borderLight};
 `;
 
 const HeaderContent = styled.div`
@@ -22,6 +26,7 @@ const HeaderContent = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
 `;
 
 const Title = styled.h1`
@@ -36,7 +41,7 @@ const Title = styled.h1`
 
 const ButtonGroup = styled.div`
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   align-items: center;
   
   @media (max-width: ${({ theme }) => theme.breakpoints.mobile}) {
@@ -211,29 +216,74 @@ const ThemeButton = styled(Button)`
   justify-content: center;
 `;
 
+const Logo = styled.div`
+  font-size: 1.5rem;
+  font-weight: bold;
+  background: ${({ theme }) => theme.colors.gradients.primary};
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding: 0.5rem;
+  border-radius: ${({ theme }) => theme.radius.medium};
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+`;
+
+const Navigation = styled.nav`
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+`;
+
+const HeaderButton = styled(Button)`
+  padding: 0.5rem;
+  border-radius: ${({ theme }) => theme.radius.medium};
+  background-color: ${({ theme }) => theme.colors.backgroundHover || 'rgba(0,0,0,0.05)'};
+  color: ${({ theme }) => theme.colors.text};
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.primary};
+    color: white;
+    transform: scale(1.05);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  svg {
+    font-size: 1.2rem;
+  }
+`;
+
 interface HeaderProps {
-  onAddClick: () => void;
-  onStatsClick: () => void;
+  onAddClick?: () => void;
+  onStatsClick?: () => void;
+  onSettingsClick?: () => void;
   onThemeToggle: () => void;
   isDarkMode: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ 
+export const Header: React.FC<HeaderProps> = ({ 
   onAddClick, 
   onStatsClick, 
-  onThemeToggle,
+  onSettingsClick,
+  onThemeToggle, 
   isDarkMode 
 }) => {
   const { t } = useTranslation();
   const { language, changeLanguage } = useSettings();
-  const { user, logout, isAuthenticated } = useAuth();
-  const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
+  const { currentUser, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const toggleLanguageMenu = () => {
-    setIsLanguageMenuOpen(!isLanguageMenuOpen);
-  };
-  
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
@@ -246,186 +296,105 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <HeaderContainer>
       <HeaderContent>
-        <Title>{t('common.jobTracker')}</Title>
-        
-        {/* Desktop buttons */}
+        <Logo>JT</Logo>
         <ButtonGroup>
-          {isAuthenticated && user && (
-            <UserInfo>
-              <UserIcon size={16} />
-              <span>{user.name}</span>
-            </UserInfo>
-          )}
-          
-          <LanguageMenu>
-            <Button 
-              variant="icon" 
-              onClick={toggleLanguageMenu}
-              aria-label={t('header.language')}
-            >
-              <FaGlobe size={20} />
-            </Button>
-            <LanguageDropdown isOpen={isLanguageMenuOpen}>
-              <LanguageOption 
-                active={language === 'ru'} 
-                onClick={() => {
-                  changeLanguage('ru');
-                  setIsLanguageMenuOpen(false);
-                }}
-              >
-                Русский
-              </LanguageOption>
-              <LanguageOption 
-                active={language === 'en'} 
-                onClick={() => {
-                  changeLanguage('en');
-                  setIsLanguageMenuOpen(false);
-                }}
-              >
-                English
-              </LanguageOption>
-            </LanguageDropdown>
-          </LanguageMenu>
-          
-          <ThemeButton 
-            variant="icon" 
-            onClick={onThemeToggle}
-            aria-label={isDarkMode ? t('header.switchToLight') : t('header.switchToDark')}
-          >
-            {isDarkMode ? <BsSunFill size={24} /> : <BsMoonFill size={24} />}
-          </ThemeButton>
-          
-          {isAuthenticated && (
+          {currentUser && (
             <>
-              <Button 
-                variant="primary" 
-                onClick={onAddClick}
-                aria-label={t('common.addApplication')}
-              >
-                <FaPlus size={20} />
-              </Button>
-              
-              <Button 
-                variant="secondary" 
+              <HeaderButton
                 onClick={onStatsClick}
                 aria-label={t('common.viewStatistics')}
               >
-                <FaChartBar size={20} />
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                onClick={handleLogout}
-                aria-label={t('auth.logout')}
+                <FaChartBar size={18} />
+              </HeaderButton>
+              <HeaderButton
+                onClick={onAddClick}
+                aria-label={t('common.addApplication')}
               >
-                <FaSignOutAlt size={18} />
-              </Button>
+                <FaPlus size={18} />
+              </HeaderButton>
+              <HeaderButton
+                onClick={onSettingsClick}
+                aria-label={t('common.settings')}
+              >
+                <FaCog size={18} />
+              </HeaderButton>
+              <HeaderButton
+                onClick={onThemeToggle}
+                aria-label={isDarkMode ? t('header.switchToLight') : t('header.switchToDark')}
+              >
+                {isDarkMode ? <BsSunFill size={18} /> : <BsMoonFill size={18} />}
+              </HeaderButton>
             </>
           )}
         </ButtonGroup>
         
-        {/* Mobile menu button */}
         <MobileButtonGroup>
-          <Button 
-            variant="icon" 
+          <HeaderButton
             onClick={toggleMobileMenu}
-            aria-label={isMobileMenuOpen ? "Закрыть меню" : "Открыть меню"}
+            aria-label={t('common.menu')}
           >
             <FaBars size={20} />
-          </Button>
+          </HeaderButton>
         </MobileButtonGroup>
       </HeaderContent>
       
-      {/* Mobile menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <MobileMenu
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            transition={{ type: 'tween' }}
+            transition={{ type: 'tween', duration: 0.3 }}
           >
             <MobileMenuHeader>
               <Title>{t('common.jobTracker')}</Title>
-              <Button 
-                variant="icon" 
+              <HeaderButton 
                 onClick={toggleMobileMenu}
-                aria-label="Закрыть меню"
+                aria-label={t('common.closeMenu')}
               >
                 <FaTimes size={20} />
-              </Button>
+              </HeaderButton>
             </MobileMenuHeader>
             
             <MobileMenuButtons>
-              {isAuthenticated && user && (
-                <UserInfo>
-                  <UserIcon size={18} />
-                  <span>{user.name}</span>
-                </UserInfo>
-              )}
-              
-              <ThemeSwitcher>
-                <ThemeOption 
-                  active={!isDarkMode} 
-                  onClick={() => {
-                    if (isDarkMode) onThemeToggle();
-                  }}
-                >
-                  <ThemeCircle mode="light" active={!isDarkMode}>
-                    <BsSunFill size={24} />
-                  </ThemeCircle>
-                </ThemeOption>
-                
-                <ThemeOption 
-                  active={isDarkMode} 
-                  onClick={() => {
-                    if (!isDarkMode) onThemeToggle();
-                  }}
-                >
-                  <ThemeCircle mode="dark" active={isDarkMode}>
-                    <BsMoonFill size={24} />
-                  </ThemeCircle>
-                </ThemeOption>
-              </ThemeSwitcher>
-              
-              <MobileMenuButton 
-                variant="outline" 
-                onClick={toggleLanguageMenu}
-              >
-                <FaGlobe size={20} />
-                <span>{t('header.language')}</span>
-              </MobileMenuButton>
-              
-              {isAuthenticated && (
+              {currentUser && (
                 <>
-                  <MobileMenuButton 
-                    variant="primary" 
-                    onClick={() => {
-                      onAddClick();
-                      setIsMobileMenuOpen(false);
-                    }}
-                  >
-                    <FaPlus size={20} />
-                    <span>{t('common.addApplication')}</span>
-                  </MobileMenuButton>
-                  
-                  <MobileMenuButton 
-                    variant="secondary" 
-                    onClick={() => {
-                      onStatsClick();
-                      setIsMobileMenuOpen(false);
-                    }}
-                  >
-                    <FaChartBar size={20} />
-                    <span>{t('common.viewStatistics')}</span>
-                  </MobileMenuButton>
+                  <UserInfo>
+                    <UserIcon size={18} />
+                    <span>{currentUser?.displayName || t('common.user')}</span>
+                  </UserInfo>
                   
                   <MobileMenuButton 
                     variant="outline" 
-                    onClick={handleLogout}
+                    onClick={() => {
+                      onStatsClick?.();
+                      toggleMobileMenu();
+                    }}
                   >
-                    <FaSignOutAlt size={18} />
-                    <span>{t('auth.logout')}</span>
+                    <FaChartBar size={18} />
+                    <span>{t('common.viewStatistics')}</span>
+                  </MobileMenuButton>
+
+                  <MobileMenuButton 
+                    variant="outline" 
+                    onClick={() => {
+                      onAddClick?.();
+                      toggleMobileMenu();
+                    }}
+                  >
+                    <FaPlus size={18} />
+                    <span>{t('common.addApplication')}</span>
+                  </MobileMenuButton>
+
+                  <MobileMenuButton 
+                    variant="outline" 
+                    onClick={() => {
+                      onSettingsClick?.();
+                      toggleMobileMenu();
+                    }}
+                  >
+                    <FaCog size={18} />
+                    <span>{t('common.settings')}</span>
                   </MobileMenuButton>
                 </>
               )}

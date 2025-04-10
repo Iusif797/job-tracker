@@ -17,6 +17,7 @@ import { saveApplications, loadApplications } from './utils/storage';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import { applicationApi } from './services/api';
+import { createTheme } from './theme/theme';
 
 const Footer = styled.footer`
   text-align: center;
@@ -45,11 +46,11 @@ const LoadingScreen = styled.div`
 
 // Компонент защищенного маршрута
 const ProtectedRoute: React.FC<{ element: React.ReactNode }> = ({ element }) => {
-  const { isAuthenticated, loading } = useAuth();
-  
+  const { currentUser, loading } = useAuth();
+
   if (loading) return null;
-  
-  return isAuthenticated ? <>{element}</> : <Navigate to="/login" />;
+
+  return currentUser ? <>{element}</> : <Navigate to="/auth" />;
 };
 
 const AppContent: React.FC = () => {
@@ -59,24 +60,25 @@ const AppContent: React.FC = () => {
   const [showStats, setShowStats] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { theme, autoSaveInterval, toggleTheme } = useSettings();
+  const { theme, autoSaveInterval, toggleTheme, primaryColor } = useSettings();
   const { t } = useTranslation();
-  const { isAuthenticated, user } = useAuth();
-  
+  const { currentUser } = useAuth();
+  const currentTheme = createTheme(primaryColor)[theme];
+
   // Загрузка данных при запуске
   useEffect(() => {
     const loadData = async () => {
       try {
         setIsLoading(true);
-        
-        if (isAuthenticated && user) {
+
+        if (currentUser) {
           // Если пользователь авторизован, загружаем данные с сервера
           try {
             const serverApplications = await applicationApi.getAll();
             setApplications(serverApplications);
           } catch (error) {
             console.error('Ошибка при загрузке данных с сервера:', error);
-            
+
             // Если не удалось загрузить с сервера, пробуем локальное хранилище
             const localApplications = await loadApplications();
             setApplications(localApplications);
@@ -92,15 +94,15 @@ const AppContent: React.FC = () => {
         setIsLoading(false);
       }
     };
-    
+
     loadData();
-  }, [isAuthenticated, user]);
-  
+  }, [currentUser]);
+
   // Автосохранение данных
   useEffect(() => {
     const saveInterval = setInterval(() => {
       if (applications.length > 0) {
-        if (isAuthenticated && user) {
+        if (currentUser) {
           // Если пользователь авторизован, данные будут сохраняться при каждом изменении
           // через соответствующие функции (см. ниже)
         } else {
@@ -110,15 +112,15 @@ const AppContent: React.FC = () => {
         }
       }
     }, autoSaveInterval * 60 * 1000); // Конвертация минут в миллисекунды
-    
+
     return () => clearInterval(saveInterval);
-  }, [applications, autoSaveInterval, isAuthenticated, user]);
-  
+  }, [applications, autoSaveInterval, currentUser]);
+
   // Сохранение при изменении данных
   useEffect(() => {
     const saveData = async () => {
       if (applications.length > 0) {
-        if (isAuthenticated && user) {
+        if (currentUser) {
           // Данные уже сохраняются в серверных функциях
         } else {
           // Если пользователь не авторизован, сохраняем в локальное хранилище
@@ -127,28 +129,28 @@ const AppContent: React.FC = () => {
         }
       }
     };
-    
+
     saveData();
-  }, [applications, isAuthenticated, user]);
-  
+  }, [applications, currentUser]);
+
   const handleAddApplication = async (applicationData: Omit<Application, 'id'> | Application) => {
     try {
       setIsLoading(true);
 
       // Создаем новую заявку с необходимыми полями
       let newApp: Application;
-      
+
       if ('id' in applicationData) {
         // Если id уже есть в данных
         newApp = { ...applicationData };
       } else {
         // Если id нужно создать
-        newApp = { 
-          ...applicationData, 
-          id: uuidv4() 
+        newApp = {
+          ...applicationData,
+          id: uuidv4()
         } as Application;
       }
-      
+
       // Убедимся, что папка "Отклики" установлена
       if (!newApp.folder) {
         newApp.folder = 'responses';
@@ -158,10 +160,10 @@ const AppContent: React.FC = () => {
       setApplications(prev => [...prev, newApp]);
 
       // Отправляем на сервер
-      if (isAuthenticated && user) {
+      if (currentUser) {
         await applicationApi.create(newApp);
       }
-      
+
       console.log('Отклик успешно добавлен:', newApp);
     } catch (error) {
       console.error('Ошибка при добавлении заявки:', error);
@@ -169,40 +171,40 @@ const AppContent: React.FC = () => {
       setIsLoading(false);
     }
   };
-  
+
   const handleUpdateApplication = async (updatedData: Application | Omit<Application, 'id'>) => {
     try {
       setIsLoading(true);
-      
+
       // Проверяем, содержит ли объект поле id (это полный тип Application)
       if ('id' in updatedData) {
         const updatedApplication = updatedData as Application;
-        
+
         // Убедимся, что у заявки есть поле folder
         if (updatedApplication.folder === undefined) {
           updatedApplication.folder = 'responses';
         }
-        
+
         console.log('Обновляем заявку:', updatedApplication);
-        
-        if (isAuthenticated && user) {
+
+        if (currentUser) {
           // Если пользователь авторизован, обновляем на сервере
           const savedApplication = await applicationApi.update(
-            updatedApplication.id, 
+            updatedApplication.id,
             updatedApplication
           );
-          
+
           console.log('Заявка обновлена на сервере:', savedApplication);
-          
+
           // Обновляем локальное состояние после получения ответа от сервера
-          setApplications(prevApps => 
+          setApplications(prevApps =>
             prevApps.map(app => app.id === savedApplication.id ? savedApplication : app)
           );
         } else {
           // Если пользователь не авторизован, обновляем локально
           console.log('Обновление заявки локально (пользователь не авторизован)');
-          
-          setApplications(prevApps => 
+
+          setApplications(prevApps =>
             prevApps.map(app => app.id === updatedApplication.id ? updatedApplication : app)
           );
         }
@@ -217,14 +219,14 @@ const AppContent: React.FC = () => {
       setIsLoading(false);
     }
   };
-  
+
   const handleDeleteApplication = async (id: string) => {
     try {
-      if (isAuthenticated && user) {
+      if (currentUser) {
         // Если пользователь авторизован, удаляем на сервере
         await applicationApi.delete(id);
       }
-      
+
       // В любом случае удаляем из локального состояния
       setApplications(applications.filter(app => app.id !== id));
     } catch (error) {
@@ -239,7 +241,7 @@ const AppContent: React.FC = () => {
   const handleCloseStats = () => {
     setShowStats(false);
   };
-  
+
   // Обработка нажатия кнопки редактирования
   const handleEditApplication = (id: string) => {
     const applicationToEdit = applications.find(app => app.id === id);
@@ -248,38 +250,31 @@ const AppContent: React.FC = () => {
       setShowForm(true);
     }
   };
-  
-  const currentTheme = theme === 'dark' ? darkTheme : lightTheme;
-  
+
   if (isLoading) {
     return (
       <ThemeProvider theme={currentTheme}>
-        <GlobalStyle theme={currentTheme} />
+        <GlobalStyle />
         <LoadingScreen>
           <h2>{t('common.loading')}</h2>
         </LoadingScreen>
       </ThemeProvider>
     );
   }
-  
+
   // Основной контент приложения
   const MainContent = () => (
     <AppWrapper>
       <Header 
-        onAddClick={() => {
-          setCurrentApplication(null); // Сбрасываем текущую заявку при добавлении новой
-          setShowForm(true);
-        }}
-        onStatsClick={() => {
-          setShowStats(true);
-          setShowSettings(false);
-        }}
+        onAddClick={() => setShowForm(true)}
+        onStatsClick={() => setShowStats(true)}
+        onSettingsClick={() => setShowSettings(true)}
         onThemeToggle={toggleTheme}
         isDarkMode={theme === 'dark'}
       />
-      
+
       {showForm && (
-        <ApplicationForm 
+        <ApplicationForm
           initialData={currentApplication || undefined}
           onSubmit={currentApplication ? handleUpdateApplication : handleAddApplication}
           onCancel={() => {
@@ -288,20 +283,20 @@ const AppContent: React.FC = () => {
           }}
         />
       )}
-      
+
       {showStats && (
-        <JobStats 
+        <JobStats
           applications={applications}
           onClose={handleCloseStats}
         />
       )}
-      
+
       {showSettings && (
         <Settings onBack={handleBackFromSettings} />
       )}
-      
+
       {!showStats && !showSettings && (
-        <Dashboard 
+        <Dashboard
           applications={applications}
           onUpdate={handleUpdateApplication}
           onDelete={handleDeleteApplication}
@@ -313,16 +308,16 @@ const AppContent: React.FC = () => {
           onEditApplication={handleEditApplication}
         />
       )}
-      
+
       <Footer>
         {t('footer.developedBy')} Iusif Mamedov &copy; {new Date().getFullYear()}
       </Footer>
     </AppWrapper>
   );
-  
+
   return (
     <ThemeProvider theme={currentTheme}>
-      <GlobalStyle theme={currentTheme} />
+      <GlobalStyle />
       <Router>
         <Routes>
           <Route path="/login" element={<AuthPage />} />

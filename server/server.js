@@ -18,12 +18,17 @@ syncDatabase(true);
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // Маршруты
-app.use("/api/users", userRoutes);
-app.use("/api/applications", applicationRoutes);
+app.use("/auth", userRoutes);
+app.use("/api", applicationRoutes);
 
 // Базовый маршрут для проверки API
 app.get("/", (req, res) => {
@@ -33,6 +38,15 @@ app.get("/", (req, res) => {
 // Обработка несуществующих маршрутов
 app.use((req, res) => {
   res.status(404).json({ message: "Маршрут не найден" });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    message: "Internal Server Error",
+    error: process.env.NODE_ENV === "development" ? err.message : undefined,
+  });
 });
 
 // Порт сервера

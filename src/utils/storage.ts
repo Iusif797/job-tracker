@@ -20,6 +20,7 @@ export interface AppSettings {
     statuses: boolean;
     salary: boolean;
   };
+  primaryColor: string;
 }
 
 export const defaultSettings: AppSettings = {
@@ -34,6 +35,7 @@ export const defaultSettings: AppSettings = {
     statuses: true,
     salary: true,
   },
+  primaryColor: '#5856D6' // Фиолетовый цвет по умолчанию
 };
 
 // Инициализация IndexedDB

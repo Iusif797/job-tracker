@@ -10,7 +10,15 @@
       "addFirstApplication": "Click the \"+\" button in the top right corner to add your first application.",
       "add": "Add",
       "save": "Save",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "list": "List",
+      "kanban": "Kanban",
+      "minute": "minute",
+      "minutes": "minutes",
+      "export": "Export",
+      "import": "Import",
+      "reset": "Clear",
+      "confirm": "Confirm"
     },
     "header": {
       "switchToLight": "Switch to light mode",
@@ -87,6 +95,8 @@
       "back": "Back"
     },
     "auth": {
+      "appTitle": "Job Application Tracker",
+      "appDescription": "Track and manage your job applications",
       "login": "Login",
       "register": "Register",
       "logout": "Logout",
@@ -110,6 +120,66 @@
     },
     "applications": {
       "noApplicationsInFolder": "No applications in this folder"
+    },
+    "errors": {
+      "serverError": "Server error occurred. Please try again later.",
+      "noInternet": "No internet connection",
+      "invalidCredentials": "Invalid email or password",
+      "emailExists": "Email already exists",
+      "networkError": "Unable to connect to the server"
+    },
+    "settings": {
+      "tabs": {
+        "appearance": "Appearance",
+        "notifications": "Notifications",
+        "statistics": "Statistics",
+        "data": "Data"
+      },
+      "appearance": {
+        "title": "Basic Settings",
+        "theme": "Theme",
+        "themeDescription": "Change interface color scheme",
+        "language": "Application Language",
+        "languageDescription": "Choose your preferred interface language",
+        "defaultView": "Default View",
+        "defaultViewDescription": "Choose preferred way to display applications",
+        "personalization": "Personalization",
+        "primaryColor": "Primary Color",
+        "primaryColorDescription": "Choose the main interface color"
+      },
+      "notifications": {
+        "title": "Notification Settings",
+        "enable": "Enable Notifications",
+        "enableDescription": "Receive notifications about important events",
+        "autoSave": "Auto Save",
+        "autoSaveDescription": "How often to automatically save changes"
+      },
+      "statistics": {
+        "title": "Statistics Settings",
+        "platforms": "Show Platforms",
+        "platformsDescription": "Statistics by job search platforms used",
+        "timeline": "Show Timeline",
+        "timelineDescription": "Application activity timeline",
+        "statuses": "Show Statuses",
+        "statusesDescription": "Distribution of applications by current status",
+        "salary": "Show Salaries",
+        "salaryDescription": "Analysis of salary levels in applications"
+      },
+      "data": {
+        "title": "Data Management",
+        "export": "Export Data",
+        "exportDescription": "Save current data to JSON file",
+        "import": "Import Data",
+        "importDescription": "Load data from previously saved file",
+        "reset": "Clear All Data",
+        "resetDescription": "Permanently delete all applications and settings",
+        "exportSuccess": "Data exported successfully!",
+        "importSuccess": "Data imported successfully!",
+        "resetConfirmation": "Are you sure? This action cannot be undone. Click the button again to confirm.",
+        "exportError": "Error exporting data",
+        "importError": "Error importing data",
+        "resetError": "Error resetting data"
+      }
     }
   }
 } 
