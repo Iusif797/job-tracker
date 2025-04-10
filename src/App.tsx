@@ -269,8 +269,6 @@ const AppContent: React.FC = () => {
         onAddClick={() => setShowForm(true)}
         onStatsClick={() => setShowStats(true)}
         onSettingsClick={() => setShowSettings(true)}
-        onThemeToggle={toggleTheme}
-        isDarkMode={theme === 'dark'}
       />
 
       {showForm && (

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { FaPlus, FaChartBar, FaGlobe, FaUser, FaSignOutAlt, FaBars, FaTimes, FaCog } from 'react-icons/fa';
-import { BsSunFill, BsMoonFill } from 'react-icons/bs';
 import Button from '../shared/Button';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '../../contexts/SettingsContext';
@@ -268,35 +267,40 @@ interface HeaderProps {
   onAddClick?: () => void;
   onStatsClick?: () => void;
   onSettingsClick?: () => void;
-  onThemeToggle: () => void;
-  isDarkMode: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ 
-  onAddClick, 
-  onStatsClick, 
-  onSettingsClick,
-  onThemeToggle, 
-  isDarkMode 
-}) => {
+const Header: React.FC<HeaderProps> = ({ onStatsClick, onAddClick, onSettingsClick }) => {
   const { t } = useTranslation();
-  const { language, changeLanguage } = useSettings();
   const { currentUser, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
+  const { language, changeLanguage } = useSettings();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
+  const toggleLanguageMenu = () => {
+    setIsLanguageMenuOpen(!isLanguageMenuOpen);
+  };
+
+  const handleLanguageChange = (lang: string) => {
+    changeLanguage(lang as 'ru' | 'en');
+    setIsLanguageMenuOpen(false);
+  };
+
   const handleLogout = () => {
     logout();
-    window.location.href = '/login';
+    setIsMobileMenuOpen(false);
   };
 
   return (
     <HeaderContainer>
       <HeaderContent>
-        <Logo>JT</Logo>
+        <NavLink to="/" style={{ textDecoration: 'none' }}>
+          <Title>{t('common.jobTracker')}</Title>
+        </NavLink>
+        
         <ButtonGroup>
           {currentUser && (
             <>
@@ -318,12 +322,6 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <FaCog size={18} />
               </HeaderButton>
-              <HeaderButton
-                onClick={onThemeToggle}
-                aria-label={isDarkMode ? t('header.switchToLight') : t('header.switchToDark')}
-              >
-                {isDarkMode ? <BsSunFill size={18} /> : <BsMoonFill size={18} />}
-              </HeaderButton>
             </>
           )}
         </ButtonGroup>
@@ -337,14 +335,14 @@ export const Header: React.FC<HeaderProps> = ({
           </HeaderButton>
         </MobileButtonGroup>
       </HeaderContent>
-      
+
       <AnimatePresence>
         {isMobileMenuOpen && (
           <MobileMenu
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'tween', duration: 0.3 }}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
           >
             <MobileMenuHeader>
               <Title>{t('common.jobTracker')}</Title>
@@ -356,49 +354,26 @@ export const Header: React.FC<HeaderProps> = ({
               </HeaderButton>
             </MobileMenuHeader>
             
-            <MobileMenuButtons>
-              {currentUser && (
-                <>
-                  <UserInfo>
-                    <UserIcon size={18} />
-                    <span>{currentUser?.displayName || t('common.user')}</span>
-                  </UserInfo>
-                  
-                  <MobileMenuButton 
-                    variant="outline" 
-                    onClick={() => {
-                      onStatsClick?.();
-                      toggleMobileMenu();
-                    }}
-                  >
-                    <FaChartBar size={18} />
-                    <span>{t('common.viewStatistics')}</span>
-                  </MobileMenuButton>
-
-                  <MobileMenuButton 
-                    variant="outline" 
-                    onClick={() => {
-                      onAddClick?.();
-                      toggleMobileMenu();
-                    }}
-                  >
-                    <FaPlus size={18} />
-                    <span>{t('common.addApplication')}</span>
-                  </MobileMenuButton>
-
-                  <MobileMenuButton 
-                    variant="outline" 
-                    onClick={() => {
-                      onSettingsClick?.();
-                      toggleMobileMenu();
-                    }}
-                  >
-                    <FaCog size={18} />
-                    <span>{t('common.settings')}</span>
-                  </MobileMenuButton>
-                </>
-              )}
-            </MobileMenuButtons>
+            {currentUser && (
+              <MobileMenuButtons>
+                <MobileMenuButton onClick={onStatsClick}>
+                  <FaChartBar />
+                  {t('common.viewStatistics')}
+                </MobileMenuButton>
+                <MobileMenuButton onClick={onAddClick}>
+                  <FaPlus />
+                  {t('common.addApplication')}
+                </MobileMenuButton>
+                <MobileMenuButton onClick={onSettingsClick}>
+                  <FaCog />
+                  {t('common.settings')}
+                </MobileMenuButton>
+                <MobileMenuButton onClick={handleLogout}>
+                  <FaSignOutAlt />
+                  {t('auth.logout')}
+                </MobileMenuButton>
+              </MobileMenuButtons>
+            )}
           </MobileMenu>
         )}
       </AnimatePresence>
