@@ -10,7 +10,7 @@ const ErrorContainer = styled.div`
   padding: 20px;
   text-align: center;
   background-color: ${({ theme }) => theme.colors.background};
-  color: ${({ theme }) => theme.colors.error};
+  color: ${({ theme }) => theme.colors.danger};
 `;
 
 const ErrorMessage = styled.h1`
