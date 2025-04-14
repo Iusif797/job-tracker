@@ -234,7 +234,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         {Object.entries(platformCounts).map(([platform, count]) => (
           <PlatformCard
             key={platform}
-            platform={platform}
+            platform={platform as Platform}
             count={count}
             onClick={handlePlatformClick}
             active={selectedPlatform === platform}
