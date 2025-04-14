@@ -15,7 +15,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, name: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
@@ -30,6 +30,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!auth) {
+      console.error('Firebase auth is not initialized');
+      setError('Authentication service is not available');
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       setLoading(false);
@@ -38,20 +45,73 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return unsubscribe;
   }, []);
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (email: string, password: string, name: string) => {
+    if (!auth) {
+      const error = new Error('Authentication service is not available');
+      console.error('Firebase auth is not initialized');
+      setError(error.message);
+      throw error;
+    }
+
+    if (!email || !password || !name) {
+      const error = new Error('All fields are required');
+      setError(error.message);
+      throw error;
+    }
+
+    if (password.length < 6) {
+      const error = new Error('Password should be at least 6 characters long');
+      setError(error.message);
+      throw error;
+    }
+
     try {
       setError(null);
+      setLoading(true);
+      
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(user, { displayName: name });
+      
+      try {
+        await updateProfile(user, { 
+          displayName: name.trim(),
+          photoURL: null // Устанавливаем значение по умолчанию
+        });
+      } catch (profileError) {
+        console.error('Error updating profile:', profileError);
+        // Логируем ошибку, но продолжаем, так как основная регистрация прошла успешно
+      }
+      
       setCurrentUser(user);
     } catch (err) {
       console.error('Registration error:', err);
+      
       if (err instanceof Error) {
-        setError(err.message);
+        const errorCode = (err as any).code; // Firebase ошибки имеют code
+        switch(errorCode) {
+          case 'auth/email-already-in-use':
+            setError('This email is already registered. Please try logging in.');
+            break;
+          case 'auth/invalid-email':
+            setError('Please enter a valid email address.');
+            break;
+          case 'auth/weak-password':
+            setError('Password should be at least 6 characters long.');
+            break;
+          case 'auth/network-request-failed':
+            setError('Network error. Please check your internet connection.');
+            break;
+          case 'auth/too-many-requests':
+            setError('Too many attempts. Please try again later.');
+            break;
+          default:
+            setError('An error occurred during registration. Please try again.');
+        }
       } else {
-        setError('An error occurred during registration');
+        setError('An unexpected error occurred. Please try again.');
       }
       throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
