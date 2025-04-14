@@ -221,10 +221,10 @@ const Dashboard: React.FC<DashboardProps> = ({
         <DashboardTitle>{t('dashboard.title')}</DashboardTitle>
         <DashboardControls>
           <Button 
-            icon={<FaChartBar />}
             onClick={onSettings}
             variant="secondary"
           >
+            <FaChartBar />
             {t('dashboard.statistics')}
           </Button>
         </DashboardControls>
