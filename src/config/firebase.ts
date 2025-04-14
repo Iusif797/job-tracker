@@ -2,6 +2,8 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
+console.log('Starting Firebase initialization...');
+
 const requiredEnvVars = [
   'REACT_APP_FIREBASE_API_KEY',
   'REACT_APP_FIREBASE_AUTH_DOMAIN',
@@ -15,39 +17,42 @@ const requiredEnvVars = [
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 if (missingVars.length > 0) {
   console.error('Missing required environment variables:', missingVars);
-  // Не прерываем выполнение, а используем значения по умолчанию
+  console.log('Available environment variables:', process.env);
 }
 
 const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || '',
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || '',
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || '',
-  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || '',
-  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || '',
-  appId: process.env.REACT_APP_FIREBASE_APP_ID || ''
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID
 };
+
+console.log('Firebase config prepared:', {
+  ...firebaseConfig,
+  apiKey: '***' // Скрываем API ключ в логах
+});
 
 let app;
 let auth;
 let db;
 
 try {
-  // Initialize Firebase
+  console.log('Initializing Firebase app...');
   app = initializeApp(firebaseConfig);
-  
-  // Get Auth instance
+  console.log('Firebase app initialized successfully');
+
+  console.log('Initializing Firebase Auth...');
   auth = getAuth(app);
-  
-  // Get Firestore instance
+  console.log('Firebase Auth initialized successfully');
+
+  console.log('Initializing Firestore...');
   db = getFirestore(app);
-  
-  console.log('Firebase initialized successfully');
+  console.log('Firestore initialized successfully');
 } catch (error) {
   console.error('Error initializing Firebase:', error);
-  // Создаем пустые объекты для предотвращения ошибок
-  app = {} as any;
-  auth = {} as any;
-  db = {} as any;
+  throw error; // Прокидываем ошибку дальше для отлова в ErrorBoundary
 }
 
 export { auth, db };

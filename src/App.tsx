@@ -18,6 +18,7 @@ import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import { applicationApi } from './services/api';
 import { createTheme } from './theme/theme';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const Footer = styled.footer`
   text-align: center;
@@ -314,24 +315,37 @@ const AppContent: React.FC = () => {
   );
 
   return (
-    <ThemeProvider theme={currentTheme}>
-      <GlobalStyle />
-      <Router>
-        <Routes>
-          <Route path="/login" element={<AuthPage />} />
-          <Route path="/" element={<ProtectedRoute element={<MainContent />} />} />
-        </Routes>
-      </Router>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <SettingsProvider>
+        <ThemeProvider theme={currentTheme}>
+          <GlobalStyle />
+          <Router>
+            <AuthProvider>
+              <Routes>
+                <Route path="/login" element={<AuthPage />} />
+                <Route path="/" element={<ProtectedRoute element={<MainContent />} />} />
+              </Routes>
+            </AuthProvider>
+          </Router>
+        </ThemeProvider>
+      </SettingsProvider>
+    </ErrorBoundary>
   );
 };
 
 const App: React.FC = () => (
-  <AuthProvider>
+  <ErrorBoundary>
     <SettingsProvider>
-      <AppContent />
+      <ThemeProvider theme={lightTheme}>
+        <GlobalStyle />
+        <Router>
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
+        </Router>
+      </ThemeProvider>
     </SettingsProvider>
-  </AuthProvider>
+  </ErrorBoundary>
 );
 
 export default App;
