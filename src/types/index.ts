@@ -1,4 +1,4 @@
-export type Platform = 'LinkedIn' | 'Glassdoor' | 'HeadHunter' | 'Indeed' | 'Прямой контакт' | 'Другое';
+export type Platform = 'LinkedIn' | 'Glassdoor' | 'HeadHunter' | 'Indeed' | 'Прямой контакт' | 'Other';
 export type Status = 'Applied' | 'Viewed' | 'Interview' | 'Offer' | 'Rejected';
 
 export interface Application {

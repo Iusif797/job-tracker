@@ -12,11 +12,15 @@ type PlatformConfig = {
   badge: string;
 };
 
-type PlatformConfigs = {
-  [K in Platform]: PlatformConfig;
-};
+interface PlatformCardProps {
+  platform: Platform;
+  count: number;
+  onClick: (platform: Platform) => void;
+  active?: boolean;
+  onQuickAdd?: (platform: Platform) => void;
+}
 
-const PLATFORM_CONFIGS = {
+const PLATFORM_CONFIGS: Record<Platform, PlatformConfig> = {
   'LinkedIn': {
     icon: <FaLinkedinIn size={32} />,
     color: '#0077B5',
@@ -42,20 +46,12 @@ const PLATFORM_CONFIGS = {
     color: '#FF9500',
     badge: 'Личный контакт'
   },
-  'Другое': {
+  'Other': {
     icon: <FaGlobe size={32} />,
     color: '#8E8E93',
     badge: 'Другая платформа'
   }
-} as const satisfies Record<Platform, PlatformConfig>;
-
-interface PlatformCardProps {
-  platform: Platform;
-  count: number;
-  onClick: (platform: Platform) => void;
-  active?: boolean;
-  onQuickAdd?: (platform: Platform) => void;
-}
+};
 
 const StyledCard = styled(motion.div)<{ color?: string; active?: boolean }>`
   display: flex;
