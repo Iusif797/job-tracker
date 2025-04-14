@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import PlatformCard from './PlatformCard';
 import ApplicationList from './ApplicationList';
-import { FaListUl, FaThLarge, FaFolder, FaChartBar } from 'react-icons/fa';
+import { FaListUl, FaThLarge, FaFolder, FaChartBar, FaPlus } from 'react-icons/fa';
 import { Application, Platform, Status } from '../../types';
 import Button from '../shared/Button';
 import { useSettings } from '../../contexts/SettingsContext';
@@ -192,10 +192,11 @@ const Dashboard: React.FC<DashboardProps> = ({
       company: '',
       position: 'Frontend',
       date: new Date().toISOString().substring(0, 10),
-      platform: platform,
-      status: 'Applied',
+      platform,
+      status: 'Applied' as Status,
       notes: '',
-      folder: 'responses' // Явно указываем папку "Отклики"
+      folder: 'responses',
+      favorite: false
     };
     
     onAddApplication(newApplication);
@@ -212,90 +213,68 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   return (
     <DashboardContainer
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
     >
       <DashboardHeader>
-        <DashboardTitle>
-          {selectedPlatform 
-            ? t('dashboard.applicationFor', { platform: selectedPlatform }) 
-            : t('dashboard.allApplications')}
-        </DashboardTitle>
+        <DashboardTitle>{t('dashboard.title')}</DashboardTitle>
         <DashboardControls>
           <Button 
-            variant="outline"
-            onClick={() => console.log('View stats')}
-            aria-label="Статистика"
+            icon={<FaChartBar />}
+            onClick={onSettings}
+            variant="secondary"
           >
-            <FaChartBar size={18} />
-            <span>Статистика</span>
-          </Button>
-          
-          <Button 
-            variant="primary"
-            onClick={() => handleQuickAdd('LinkedIn')}
-            aria-label="Добавить отклик"
-          >
-            <FaFolder size={18} />
-            <span>Добавить отклик</span>
+            {t('dashboard.statistics')}
           </Button>
         </DashboardControls>
       </DashboardHeader>
-      
+
       <PlatformsGrid>
-        {platforms.map(platform => (
-          <PlatformCard 
+        {Object.entries(platformCounts).map(([platform, count]) => (
+          <PlatformCard
             key={platform}
-            platform={platform} 
-            count={platformCounts[platform] || 0}
+            platform={platform}
+            count={count}
             onClick={handlePlatformClick}
-            onQuickAdd={handleQuickAdd}
             active={selectedPlatform === platform}
+            onQuickAdd={handleQuickAdd}
           />
         ))}
       </PlatformsGrid>
-      
+
+      <ViewSelector>
+        <ViewOption
+          active={currentView === 'list'}
+          onClick={() => setCurrentView('list')}
+        >
+          <FaListUl /> {t('dashboard.listView')}
+        </ViewOption>
+        <ViewOption
+          active={currentView === 'kanban'}
+          onClick={() => setCurrentView('kanban')}
+        >
+          <FaThLarge /> {t('dashboard.kanbanView')}
+        </ViewOption>
+      </ViewSelector>
+
       {applications.length === 0 ? (
         <NoApplicationsMessage
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
         >
-          <h3>{t('common.noApplications')}</h3>
-          <p>{t('common.addFirstApplication')}</p>
+          {t('dashboard.noApplications')}
         </NoApplicationsMessage>
       ) : (
-        <>
-          <ViewSelector>
-            <ViewOption 
-              active={currentView === 'list'} 
-              onClick={() => setCurrentView('list')}
-            >
-              <FaListUl style={{ marginRight: '8px' }} />
-              {t('dashboard.list')}
-            </ViewOption>
-            <ViewOption 
-              active={currentView === 'kanban'} 
-              onClick={() => setCurrentView('kanban')}
-            >
-              <FaThLarge style={{ marginRight: '8px' }} />
-              {t('dashboard.kanban')}
-            </ViewOption>
-          </ViewSelector>
-          
-          <ApplicationList 
-            applications={filteredApplications}
-            onUpdate={onUpdate}
-            onDelete={onDelete}
-            onEdit={onEditApplication}
-            viewMode={currentView}
-            folders={folders}
-          />
-        </>
+        <ApplicationList
+          applications={filteredApplications}
+          onUpdate={onUpdate}
+          onDelete={onDelete}
+          onEdit={onEditApplication}
+          viewMode={currentView}
+          folders={folders}
+        />
       )}
-
-      <QuickAddMenu onAddApplication={handleQuickAdd} />
     </DashboardContainer>
   );
 };

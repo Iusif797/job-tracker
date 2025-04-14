@@ -6,6 +6,49 @@ import { BsBriefcaseFill } from 'react-icons/bs';
 import { motion } from 'framer-motion';
 import { Platform } from '../../types';
 
+type PlatformConfig = {
+  icon: React.ReactElement;
+  color: string;
+  badge: string;
+};
+
+type PlatformConfigs = {
+  [K in Platform]: PlatformConfig;
+};
+
+const PLATFORM_CONFIGS = {
+  'LinkedIn': {
+    icon: <FaLinkedinIn size={32} />,
+    color: '#0077B5',
+    badge: 'Социальная сеть'
+  },
+  'Glassdoor': {
+    icon: <SiGlassdoor size={32} />,
+    color: '#0CAA41',
+    badge: 'Отзывы о компаниях'
+  },
+  'HeadHunter': {
+    icon: <BsBriefcaseFill size={32} />,
+    color: '#D6001C',
+    badge: 'HH.ru'
+  },
+  'Indeed': {
+    icon: <SiIndeed size={32} />,
+    color: '#003A9B',
+    badge: 'Международная биржа'
+  },
+  'Прямой контакт': {
+    icon: <FaUserTie size={32} />,
+    color: '#FF9500',
+    badge: 'Личный контакт'
+  },
+  'Другое': {
+    icon: <FaGlobe size={32} />,
+    color: '#8E8E93',
+    badge: 'Другая платформа'
+  }
+} as const satisfies Record<Platform, PlatformConfig>;
+
 interface PlatformCardProps {
   platform: Platform;
   count: number;
@@ -115,44 +158,7 @@ const PlatformCard: React.FC<PlatformCardProps> = ({
   onQuickAdd,
   active = false 
 }) => {
-  let icon: React.ReactElement;
-  let color: string;
-  let badge: string = '';
-  
-  const platformName = platform as string;
-  
-  switch (platformName) {
-    case 'LinkedIn':
-      icon = <FaLinkedinIn size={32} />;
-      color = '#0077B5';
-      badge = 'Социальная сеть';
-      break;
-    case 'Glassdoor':
-      icon = <SiGlassdoor size={32} />;
-      color = '#0CAA41';
-      badge = 'Отзывы о компаниях';
-      break;
-    case 'HeadHunter':
-      icon = <BsBriefcaseFill size={32} />;
-      color = '#D6001C';
-      badge = 'HH.ru';
-      break;
-    case 'Indeed':
-      icon = <SiIndeed size={32} />;
-      color = '#003A9B';
-      badge = 'Международная биржа';
-      break;
-    case 'Прямой контакт':
-      icon = <FaUserTie size={32} />;
-      color = '#FF9500';
-      badge = 'Личный контакт';
-      break;
-    default:
-      icon = <FaGlobe size={32} />;
-      color = '#8E8E93';
-      badge = 'Другая платформа';
-      break;
-  }
+  const { icon, color, badge } = PLATFORM_CONFIGS[platform];
   
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
