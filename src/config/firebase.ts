@@ -1,6 +1,7 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
+import { getAnalytics, Analytics } from 'firebase/analytics';
 
 console.log('Starting Firebase initialization...');
 
@@ -10,7 +11,8 @@ const requiredEnvVars = [
   'REACT_APP_FIREBASE_PROJECT_ID',
   'REACT_APP_FIREBASE_STORAGE_BUCKET',
   'REACT_APP_FIREBASE_MESSAGING_SENDER_ID',
-  'REACT_APP_FIREBASE_APP_ID'
+  'REACT_APP_FIREBASE_APP_ID',
+  'REACT_APP_FIREBASE_MEASUREMENT_ID'
 ] as const;
 
 // Проверяем наличие всех необходимых переменных окружения
@@ -30,7 +32,8 @@ const firebaseConfig = {
   projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID!,
   storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET!,
   messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID!,
-  appId: process.env.REACT_APP_FIREBASE_APP_ID!
+  appId: process.env.REACT_APP_FIREBASE_APP_ID!,
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID!
 };
 
 // Проверяем, что все значения в конфигурации определены
@@ -51,6 +54,7 @@ console.log('Firebase config prepared:', {
 let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
+let analytics: Analytics;
 
 try {
   console.log('Initializing Firebase app...');
@@ -64,14 +68,18 @@ try {
   console.log('Initializing Firestore...');
   db = getFirestore(app);
   console.log('Firestore initialized successfully');
+
+  console.log('Initializing Analytics...');
+  analytics = getAnalytics(app);
+  console.log('Analytics initialized successfully');
 } catch (error) {
   console.error('Error initializing Firebase:', error);
   throw new Error('Failed to initialize Firebase services');
 }
 
-if (!auth || !db) {
+if (!auth || !db || !analytics) {
   throw new Error('Firebase services not properly initialized');
 }
 
-export { auth, db };
+export { auth, db, analytics };
 export default app; 

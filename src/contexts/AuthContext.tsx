@@ -116,18 +116,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const login = async (email: string, password: string) => {
+    if (!auth) {
+      const error = new Error('Authentication service is not available');
+      console.error('Firebase auth is not initialized');
+      setError(error.message);
+      throw error;
+    }
+
+    if (!email || !password) {
+      const error = new Error('Email and password are required');
+      setError(error.message);
+      throw error;
+    }
+
     try {
       setError(null);
+      setLoading(true);
+      
       const { user } = await signInWithEmailAndPassword(auth, email, password);
       setCurrentUser(user);
     } catch (err) {
       console.error('Login error:', err);
+      
       if (err instanceof Error) {
-        setError(err.message);
+        const errorCode = (err as any).code;
+        switch(errorCode) {
+          case 'auth/invalid-email':
+            setError('Please enter a valid email address.');
+            break;
+          case 'auth/user-disabled':
+            setError('This account has been disabled.');
+            break;
+          case 'auth/user-not-found':
+            setError('No account found with this email.');
+            break;
+          case 'auth/wrong-password':
+            setError('Incorrect password.');
+            break;
+          case 'auth/network-request-failed':
+            setError('Network error. Please check your internet connection.');
+            break;
+          case 'auth/too-many-requests':
+            setError('Too many attempts. Please try again later.');
+            break;
+          case 'auth/invalid-api-key':
+            setError('Authentication service is not properly configured. Please contact support.');
+            break;
+          default:
+            setError('An error occurred during login. Please try again.');
+        }
       } else {
-        setError('An error occurred during login');
+        setError('An unexpected error occurred. Please try again.');
       }
       throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
